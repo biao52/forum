@@ -4,6 +4,11 @@ spring:
   output:
     ansi:
       enabled: ALWAYS # 配置输出的效果
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/forum_db?characterEncoding=utf8&useSSL=false  # 数据库连接串
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.jdbc.Driver # 数据库连接驱动
 
 server:
   port: 58080 # 自定义的服务端口号
@@ -17,3 +22,7 @@ logging:
     com.bitejiuyeke.forum: debug # 指定包下的日志级别
   file:
     path: D:/log/bit_forum # 日志保存的路径
+
+# mybatis 相关配置，单独配置，顶格写
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml # 指定 xxxMapper.xml的扫描路径
