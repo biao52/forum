@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * @Author 比特就业课
  */
-// 表示返回的结果是数据
+//  表示返回的结果是数据
 @RestController
 // 定义一级映射路径
 @RequestMapping("/test")

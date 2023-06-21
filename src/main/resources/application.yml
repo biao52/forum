@@ -11,7 +11,7 @@ server:
 
 logging:
   pattern:
-    dateformat: MM-dd HH:mm:ss # 日期的显示格式
+    dateformat: MM-dd HH:mm:ss #  日期的显示格式
   level:
     root: info # 日志的默认级别
     com.bitejiuyeke.forum: debug # 指定包下的日志级别
