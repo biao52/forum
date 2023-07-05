@@ -2,6 +2,9 @@ package com.bitejiuyeke.forum.dao;
 
 import com.bitejiuyeke.forum.model.Article;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface ArticleMapper {
@@ -16,4 +19,25 @@ public interface ArticleMapper {
     int updateByPrimaryKeyWithBLOBs(Article row);
 
     int updateByPrimaryKey(Article row);
+
+    /**
+     * 查询所有帖子列表
+     * @return
+     */
+    List<Article> selectAll ();
+
+    /**
+     * 根据版块Id查询所有帖子列表
+     * @param boardId 版块Id
+     * @return
+     */
+    List<Article> selectAllByBoardId (@Param("boardId") Long boardId);
+
+    /**
+     * 根据帖子Id查询详情
+     * @param id 帖子Id
+     * @return 帖子详情
+     */
+    Article selectDetailById (@Param("id") Long id);
+
 }

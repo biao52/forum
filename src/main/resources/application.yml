@@ -9,6 +9,13 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.jdbc.Driver # 数据库连接驱动
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER #Springfox-Swagger兼容性配置
+  # JSON序列化配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss # 日期格式
+    default-property-inclusion: NON_NULL # 不为null时序列化
 
 server:
   port: 58080 # 自定义的服务端口号
@@ -26,3 +33,10 @@ logging:
 # mybatis 相关配置，单独配置，顶格写
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml # 指定 xxxMapper.xml的扫描路径
+
+# 项目自定义相关配置
+bit-forum:
+  login:
+    url: sign-in.html  # 未登录状况下强制跳转页面
+  index: # 首页配置节点
+    board-num: 9  # 首页中显示的版块个数

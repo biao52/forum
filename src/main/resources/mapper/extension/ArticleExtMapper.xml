@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitejiuyeke.forum.dao.ArticleMapper">
+  <!-- 自定义结果集映映射 -->
+  <resultMap id="AllInfoResultMap" type="com.bitejiuyeke.forum.model.Article" extends="ResultMapWithBLOBs">
+    <!-- 关联的用户的映射 -->
+    <association property="user" resultMap="com.bitejiuyeke.forum.dao.UserMapper.BaseResultMap"
+                 columnPrefix="u_" />
+    <!-- 关联版块的映射 -->
+    <association property="board" resultMap="com.bitejiuyeke.forum.dao.BoardMapper.BaseResultMap"
+                 columnPrefix="b_" />
+   </resultMap>
+
+  <!-- 查询所有未被删除的帖子列表，不包含content -->
+  <select id="selectAll" resultMap="AllInfoResultMap">
+    select
+    u.id as u_id,
+    u.avatarUrl as u_avatarUrl,
+    u.nickname as u_nickname,
+    a.id,
+    a.boardId,
+    a.userId,
+    a.title,
+    a.visitCount,
+    a.replyCount,
+    a.likeCount,
+    a.state,
+    a.createTime,
+    a.updateTime
+    from
+    t_article a, t_user u
+    where
+    a.userId = u.id
+    and a.deleteState = 0
+    order by a.createTime desc
+  </select>
+
+  <!-- 根据版块ID查询所有未被删除的帖子列表，不包含content -->
+  <select id="selectAllByBoardId" resultMap="AllInfoResultMap" parameterType="java.lang.Long">
+    select
+    u.id as u_id,
+    u.avatarUrl as u_avatarUrl,
+    u.nickname as u_nickname,
+    a.id,
+    a.boardId,
+    a.userId,
+    a.title,
+    a.visitCount,
+    a.replyCount,
+    a.likeCount,
+    a.state,
+    a.createTime,
+    a.updateTime
+    from
+    t_article a, t_user u
+    where
+    a.userId = u.id
+    and a.deleteState = 0
+    and a.boardId = #{boardId,jdbcType=BIGINT}
+    order by a.createTime desc
+  </select>
+
+  <select id="selectDetailById" resultMap="AllInfoResultMap" parameterType="java.lang.Long">
+    select
+    u.id as u_id,
+    u.avatarUrl as u_avatarUrl,
+    u.nickname as u_nickname,
+    u.gender as u_gender,
+    u.isAdmin as u_isAdmin,
+    u.state as u_state,
+    u.deleteState as u_deleteState,
+    b.id as b_id,
+    b.name as b_name,
+    b.state as b_state,
+    b.deleteState as b_deleteState,
+    a.id,
+    a.boardId,
+    a.userId,
+    a.title,
+    a.content,
+    a.visitCount,
+    a.replyCount,
+    a.likeCount,
+    a.state,
+    a.createTime,
+    a.updateTime
+    from
+    t_article a, t_user u, t_board b
+    where
+    a.userId = u.id
+    and
+    a.boardId = b.id
+    and a.deleteState = 0
+    and a.id = #{id,jdbcType=BIGINT}
+  </select>
+</mapper>

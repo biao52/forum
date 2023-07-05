@@ -9,6 +9,7 @@ import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.UUID;
 
 @SpringBootTest
 class ForumApplicationTests {
@@ -38,8 +39,8 @@ class ForumApplicationTests {
 	}
 
 	@Test
-	void contextLoads() {
-		System.out.println("TEST : 基于Spring的论坛系统-前后端分离 ");
+	void testUUID () {
+		System.out.println(UUID.randomUUID().toString());
 	}
 
 }

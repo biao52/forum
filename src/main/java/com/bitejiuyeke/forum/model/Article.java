@@ -1,5 +1,6 @@
 package com.bitejiuyeke.forum.model;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Date;
@@ -14,10 +15,13 @@ public class Article {
 
     private String title;
 
+    // 访问次数
     private Integer visitCount;
 
+    // 回复次数
     private Integer replyCount;
 
+    // 点赞次数
     private Integer likeCount;
 
     private Byte state;
@@ -29,4 +33,13 @@ public class Article {
     private Date updateTime;
 
     private String content;
+
+    @ApiModelProperty("是否作者")
+    private boolean isOwn = false;
+
+    // 关联对象-作者
+    private User user;
+
+    // 关联对象-版块
+    private Board board;
 }
