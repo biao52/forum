@@ -211,4 +211,22 @@ public class ArticleController {
         return AppResult.success();
     }
 
+    @ApiOperation("获取用户的帖子列表")
+    @GetMapping("/getAllByUserId")
+    public AppResult<List<Article>> getAllByUserId (HttpServletRequest request ,
+                                     @ApiParam("用户Id") @RequestParam(value = "userId", required = false) Long userId) {
+        // 如果UserId为空，那么从session中获取当前登录的用户Id
+        if (userId == null) {
+            // 获取Session
+            HttpSession session = request.getSession(false);
+            // 获取User对象
+            User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+            userId = user.getId();
+        }
+        // 调用Service
+        List<Article> articles = articleService.selectByUserId(userId);
+        // 返回结果
+        return AppResult.success(articles);
+    }
+
 }

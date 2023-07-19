@@ -27,7 +27,8 @@
         </div>
         <div class="col d-flex flex-column">
           <div class="card-body">
-            <h2 id="settings_nickname" class="mb-4">比特鑫哥</h2>
+            <!-- 昵称 -->
+            <h2 id="settings_nickname" class="mb-4"></h2>
             <input type="text" style="display: none;" id="settings_user_id">
             <div class="row align-items-center">
               <div class="col-auto">
@@ -193,7 +194,30 @@
     // ================= 获取用户详情，初始化页面内容 =================
     // 发送AJAX请求，成功时 调用initUserInfo方法，完成页面数据初始化
     $.ajax({
-      
+      type : 'get',
+      url : 'user/info',
+      // 回调
+      success : function (respData) {
+        if (respData.code == 0) {
+          // 成功
+          initUserInfo(respData.data);
+        } else {
+          // 提示信息
+          $.toast({
+                heading: '警告',
+                text: respData.message,
+                icon: 'warning'
+            });
+          }
+        },
+        error : function () {
+          // 提示信息
+          $.toast({
+              heading: '错误',
+              text: '访问出现问题，请与管理员联系.',
+              icon: 'error'
+          });
+        }
     });
   });
 
@@ -231,11 +255,6 @@
       return;
     }
 
-    // 构造query string
-    let searchParams = new URLSearchParams(userInfo);
-    let queryString = '?' + searchParams.toString();
-    console.log(queryString);
-
     // 定义接口路径
     let userURL = 'user/modifyInfo';
     if (type == 1) {
@@ -246,6 +265,51 @@
 
     // 发送请求，提示响应结果
     $.ajax({
+      type : 'post',
+      url : userURL,
+      contentType : 'application/x-www-form-urlencoded',
+      data : userInfo,
+      // 回调
+      success : function (respData) {
+        if (respData.code == 0) {
+          // 获取用户对象
+          let user = respData.data;
+
+          // user对象有效，并且昵称有效 修改页面中的内容
+          if (user && user.nickname) {
+            // 个人中心页面中的昵称
+            $('#settings_nickname').html(user.nickname);
+            // 导航栏中的昵称
+            $('#index_nav_nickname').html(user.nickname);
+          }
+          // 如查密码修改成功强制登录
+          if (type == 2) {
+            location.assign('sign-in.html');
+            return;
+          }
+          // 提示信息
+          $.toast({
+                heading: '成功',
+                text: respData.message,
+                icon: 'success'
+            });
+        } else {
+          // 提示信息
+          $.toast({
+                heading: '警告',
+                text: respData.message,
+                icon: 'warning'
+            });
+          }
+        },
+        error : function () {
+          // 提示信息
+          $.toast({
+              heading: '错误',
+              text: '访问出现问题，请与管理员联系.',
+              icon: 'error'
+          });
+        }
       
     });
 
@@ -268,7 +332,6 @@
     }
     // 构造数据
     let nicknameObj = {
-      id : $('#settings_user_id').val(),
       nickname : nicknameEl.val()
     }
     // 发送请求
@@ -286,7 +349,6 @@
     }
     // 构造数据
     let emailObj = {
-      id : $('#settings_user_id').val(),
       email : emailEl.val()
     }
     // 发送请求
@@ -304,7 +366,6 @@
     }
     // 构造数据
     let phoneNumObj = {
-      id : $('#settings_user_id').val(),
       phoneNum : phoneNumEl.val()
     }
     // 发送请求
@@ -323,7 +384,6 @@
     }
     // 构造数据
     let remarkObj = {
-      id : $('#settings_user_id').val(),
       remark : remarkEl.val()
     }
     // 发送请求
@@ -368,7 +428,6 @@
 
     // 构造数据
     let  passwrodObj = {
-      id : $('#settings_user_id').val(),
       oldPassword : oldPasswordEl.val(),
       newPassword : newPasswordEl.val(),
       passwordRepeat : passwordRepeatEl.val()

@@ -5,7 +5,7 @@ spring:
     ansi:
       enabled: ALWAYS # 配置输出的效果
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/forum_db?characterEncoding=utf8&useSSL=false  # 数据库连接串
+    url: jdbc:mysql://127.0.0.1:3306/forum_db_001?characterEncoding=utf8&useSSL=false  # 数据库连接串
     username: root
     password: 123456
     driver-class-name: com.mysql.jdbc.Driver # 数据库连接驱动
@@ -26,9 +26,10 @@ logging:
     dateformat: MM-dd HH:mm:ss #  日期的显示格式
   level:
     root: info # 日志的默认级别
-    com.bitejiuyeke.forum: debug # 指定包下的日志级别
+#    com.bitejiuyeke.forum: debug # 指定包下的日志级别
   file:
-    path: D:/log/bit_forum # 日志保存的路径
+    path: /log/forum_001 # 生产环境的日志目录
+#    path: D:/log/bit_forum # 日志保存的路径
 
 # mybatis 相关配置，单独配置，顶格写
 mybatis:

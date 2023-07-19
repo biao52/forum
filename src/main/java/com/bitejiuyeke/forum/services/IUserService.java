@@ -50,4 +50,34 @@ public interface IUserService {
     void subOneArticleCountById (Long id);
 
 
+    /**
+     * 修改个人信息
+     * @param user 要更新的对象
+     */
+    void modifyInfo (User user);
+
+    /**
+     * 修改密码
+     * @param id 用户Id
+     * @param newPassword 新密码
+     * @param oldPassword 老密码
+     */
+    void modifyPassword (Long id, String newPassword, String oldPassword);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

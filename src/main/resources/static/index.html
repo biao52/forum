@@ -334,6 +334,7 @@
           // 设置用户组
           let subName = user.isAdmin == 1 ? '管理员' : '普通用户';
           $('#index_nav_name_sub').html(subName);
+          currentUserId = user.id;
 
         } else {
           // 提示信息
@@ -498,6 +499,38 @@
 
       // 发送站内信请求 url = message/send, 成功与失败都调用cleanMessageForm()方法，清空输入框
       $.ajax({
+        type : 'post',
+        url : 'message/send',
+        contentType : 'application/x-www-form-urlencoded',
+        data : postData,
+        // 回调
+        success : function (respData) {
+          if (respData.code == 0) {
+            // 成功
+            cleanMessageForm();
+            // 提示信息
+            $.toast({
+                  heading: '成功',
+                  text: respData.message,
+                  icon: 'success'
+              });
+          } else {
+            // 提示信息
+            $.toast({
+                  heading: '警告',
+                  text: respData.message,
+                  icon: 'warning'
+              });
+            }
+          },
+          error : function () {
+            // 提示信息
+            $.toast({
+                heading: '错误',
+                text: '访问出现问题，请与管理员联系.',
+                icon: 'error'
+            });
+          }
 
       });
     });
@@ -519,9 +552,43 @@
     // 成功后，处理小红点是否显示 #index_nva_message_badge
     function requestMessageUnreadCount () {
       $.ajax({
-        
+        type : 'get',
+        url : 'message/getUnreadCount',
+        // 回调
+        success : function (respData) {
+          if (respData.code == 0) {
+            // 成功, 根据未读数来判断是否显示小红点
+            // 获取要操作的HTML的元素
+            let messageBadgeEl = $('#index_nva_message_badge');
+            if (respData.data > 0) {
+              // 显示
+              messageBadgeEl.show();
+            } else {
+              // 隐藏
+              messageBadgeEl.hide();
+            }
+            
+          } else {
+            // 提示信息
+            $.toast({
+                  heading: '警告',
+                  text: respData.message,
+                  icon: 'warning'
+              });
+            }
+          },
+          error : function () {
+            // 提示信息
+            $.toast({
+                heading: '错误',
+                text: '访问出现问题，请与管理员联系.',
+                icon: 'error'
+            });
+          }
       });
     }
+
+    // 方法调用
     requestMessageUnreadCount();
     
 
@@ -529,9 +596,33 @@
     // 成功后，调用buildMessageList() 方法构建站内信列表
     function requestMessageList () {
       $.ajax({
-        
+        type : 'get',
+        url : 'message/getAll',
+        // 回调
+        success : function (respData) {
+          if (respData.code == 0) {
+            // 成功，构建站内信列表
+            buildMessageList(respData.data);  
+          } else {
+            // 提示信息
+            $.toast({
+                  heading: '警告',
+                  text: respData.message,
+                  icon: 'warning'
+              });
+            }
+          },
+          error : function () {
+            // 提示信息
+            $.toast({
+                heading: '错误',
+                text: '访问出现问题，请与管理员联系.',
+                icon: 'error'
+            });
+          }
       });
     }
+    // 方法调用
     requestMessageList();
     
 
@@ -609,6 +700,26 @@
           $('#btn_index_message_reply').show();
           $('#btn_index_send_message_reply').hide();
 
+          // 发送请求，更新状态为已读
+          if (messageItem.state == 0 && statusDotEl.hasClass('status-dot-animated bg-red')) {
+            $.ajax ({
+              type : 'post',
+              url : 'message/markRead',
+              contentType : 'application/x-www-form-urlencoded',
+              data : {id : messageItem.id},
+              // 成功回调
+              success : function (respData) {
+                if (respData.code == 0) {
+                  // 更新页面显示效果和messageItem.state
+                  statusDotEl.removeClass('status-dot-animated bg-red');
+                  // 修改未读为已读
+                  statusDescEl.html('[已读]');
+                  // 修改本地的对象状态属性
+                  messageItem.state = 1;
+                }
+              }
+            });
+          }
         });
 
         // 添加到列表
@@ -628,7 +739,6 @@
       $('#index_message_reply_receive_user_id').val('');
       $('#index_message_reply_receive_user_name').html('');
       $('#index_message_reply_receive_content').val('');
-      console.log(123);
     }
     // ============ 站内信取消接钮事件 ============
     $('#index_message_reply_cancel').click(function () {
@@ -665,7 +775,6 @@
       // 构造请求数据
       let postData = {
         repliedId: $('#index_message_detail_id').val(),
-        receiveUserId : $('#index_message_reply_receive_user_id').val(),
         content: replyReceiveContentEl.val()
       };
 
@@ -676,7 +785,41 @@
       // // 清空输入区
       // cleanMessageReplyForm ();
       $.ajax ({
-        
+        type : 'post',
+        url : 'message/reply',
+        contentType : 'application/x-www-form-urlencoded',
+        data : postData,
+        // 回调
+        success : function (respData) {
+          if (respData.code == 0) {
+            // 回复成功后刷新未读标识和站内信列表
+            requestMessageUnreadCount();
+            requestMessageList();
+            // 清空输入区
+            cleanMessageReplyForm ();
+            // 提示信息
+            $.toast({
+                  heading: '成功',
+                  text: respData.message,
+                  icon: 'success'
+              });
+          } else {
+            // 提示信息
+            $.toast({
+                  heading: '警告',
+                  text: respData.message,
+                  icon: 'warning'
+              });
+            }
+          },
+          error : function () {
+            // 提示信息
+            $.toast({
+                heading: '错误',
+                text: '访问出现问题，请与管理员联系.',
+                icon: 'error'
+            });
+          }
       });
 
 
