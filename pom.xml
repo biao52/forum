@@ -32,8 +32,6 @@
 		<druid-starter.version>1.2.16</druid-starter.version>
 		<!-- Mybatis generator-->
 		<mybatis-generator-plugin-version>1.4.1</mybatis-generator-plugin-version>
-		<!-- mybatis-generator -->
-		<mybatis-generator-plugin-version>1.4.1</mybatis-generator-plugin-version>
 		<!-- springfox -->
 		<springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
 	</properties>
