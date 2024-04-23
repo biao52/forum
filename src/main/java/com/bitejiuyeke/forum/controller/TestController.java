@@ -2,9 +2,8 @@ package com.bitejiuyeke.forum.controller;
 
 import com.bitejiuyeke.forum.common.AppResult;
 import com.bitejiuyeke.forum.exception.ApplicationException;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import com.bitejiuyeke.forum.model.User;
+import io.swagger.annotations.*;
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,5 +40,15 @@ public class TestController {
     @GetMapping("/appException")
     public AppResult testApplicationException () {
         throw new ApplicationException("这是一个ApplicationException...");
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(value = "第一个参数", name = "first"),
+            @ApiImplicitParam(value = "用户信息", name = "user")
+    })
+    @ApiOperation("API参数测试")
+    @GetMapping("/testApi")
+    public AppResult testApiParams (String first, @RequestBody User user) {
+        return AppResult.success(first);
     }
 }
