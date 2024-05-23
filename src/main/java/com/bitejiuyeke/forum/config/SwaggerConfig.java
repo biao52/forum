@@ -64,7 +64,7 @@ public class SwaggerConfig {
     }
 
     /**
-     * 解决SpringBoot 6.0以上与Swagger 3.0.0 不兼容的问题
+     * 解决SpringBoot 2.6.0以上与Swagger 3.0.0 不兼容的问题
      * 复制即可
      **/
     @Bean
