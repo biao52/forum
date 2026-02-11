@@ -1,7 +1,7 @@
-package com.bitejiuyeke.forum.services.impl;
+package com.yb.forum.services.impl;
 
-import com.bitejiuyeke.forum.model.Message;
-import com.bitejiuyeke.forum.services.IMessageService;
+import com.yb.forum.model.Message;
+import com.yb.forum.services.IMessageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class MessageServiceImplTest {

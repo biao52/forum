@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.common;
+package com.yb.forum.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bitejiuyeke.forum.dao.ArticleMapper">
-  <resultMap id="BaseResultMap" type="com.bitejiuyeke.forum.model.Article">
+<mapper namespace="com.yb.forum.dao.ArticleMapper">
+  <resultMap id="BaseResultMap" type="com.yb.forum.model.Article">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="boardId" jdbcType="BIGINT" property="boardId" />
     <result column="userId" jdbcType="BIGINT" property="userId" />
@@ -14,7 +14,7 @@
     <result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
     <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.bitejiuyeke.forum.model.Article">
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.yb.forum.model.Article">
     <result column="content" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
@@ -32,7 +32,7 @@
     from t_article
     where id = #{id,jdbcType=BIGINT}
   </select>
-  <insert id="insert" parameterType="com.bitejiuyeke.forum.model.Article" useGeneratedKeys="true" keyProperty="id">
+  <insert id="insert" parameterType="com.yb.forum.model.Article" useGeneratedKeys="true" keyProperty="id">
     insert into t_article (id, boardId, userId, 
       title, visitCount, replyCount, 
       likeCount, state, deleteState, 
@@ -44,7 +44,7 @@
       #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.bitejiuyeke.forum.model.Article" useGeneratedKeys="true" keyProperty="id">
+  <insert id="insertSelective" parameterType="com.yb.forum.model.Article" useGeneratedKeys="true" keyProperty="id">
     insert into t_article
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -123,7 +123,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.bitejiuyeke.forum.model.Article">
+  <update id="updateByPrimaryKeySelective" parameterType="com.yb.forum.model.Article">
     update t_article
     <set>
       <if test="boardId != null">
@@ -162,7 +162,7 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.bitejiuyeke.forum.model.Article">
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.yb.forum.model.Article">
     update t_article
     set boardId = #{boardId,jdbcType=BIGINT},
       userId = #{userId,jdbcType=BIGINT},
@@ -177,7 +177,7 @@
       content = #{content,jdbcType=LONGVARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.bitejiuyeke.forum.model.Article">
+  <update id="updateByPrimaryKey" parameterType="com.yb.forum.model.Article">
     update t_article
     set boardId = #{boardId,jdbcType=BIGINT},
       userId = #{userId,jdbcType=BIGINT},

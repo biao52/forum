@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.config;
+package com.yb.forum.config;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Configuration;

@@ -1,12 +1,12 @@
-package com.bitejiuyeke.forum.dao;
+package com.yb.forum.dao;
 
-import com.bitejiuyeke.forum.model.ArticleReply;
+import com.yb.forum.model.ArticleReply;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-@Mapper
+//@Mapper
 public interface ArticleReplyMapper {
     int insert(ArticleReply row);
 

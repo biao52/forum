@@ -1,14 +1,14 @@
-package com.bitejiuyeke.forum.services.impl;
+package com.yb.forum.services.impl;
 
-import com.bitejiuyeke.forum.common.AppResult;
-import com.bitejiuyeke.forum.common.ResultCode;
-import com.bitejiuyeke.forum.dao.UserMapper;
-import com.bitejiuyeke.forum.exception.ApplicationException;
-import com.bitejiuyeke.forum.model.User;
-import com.bitejiuyeke.forum.services.IUserService;
-import com.bitejiuyeke.forum.utils.MD5Util;
-import com.bitejiuyeke.forum.utils.StringUtil;
-import com.bitejiuyeke.forum.utils.UUIDUtil;
+import com.yb.forum.common.AppResult;
+import com.yb.forum.common.ResultCode;
+import com.yb.forum.dao.UserMapper;
+import com.yb.forum.exception.ApplicationException;
+import com.yb.forum.model.User;
+import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.MD5Util;
+import com.yb.forum.utils.StringUtil;
+import com.yb.forum.utils.UUIDUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

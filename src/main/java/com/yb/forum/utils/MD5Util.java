@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.utils;
+package com.yb.forum.utils;
 
 import org.apache.commons.codec.digest.DigestUtils;
 

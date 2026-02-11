@@ -1,9 +1,9 @@
-package com.bitejiuyeke.forum.services.impl;
+package com.yb.forum.services.impl;
 
-import com.bitejiuyeke.forum.model.User;
-import com.bitejiuyeke.forum.services.IUserService;
-import com.bitejiuyeke.forum.utils.MD5Util;
-import com.bitejiuyeke.forum.utils.UUIDUtil;
+import com.yb.forum.model.User;
+import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.MD5Util;
+import com.yb.forum.utils.UUIDUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;

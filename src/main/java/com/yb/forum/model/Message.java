@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.model;
+package com.yb.forum.model;
 
 import lombok.Data;
 

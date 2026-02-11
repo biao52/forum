@@ -1,13 +1,13 @@
-package com.bitejiuyeke.forum.controller;
+package com.yb.forum.controller;
 
-import com.bitejiuyeke.forum.common.AppResult;
-import com.bitejiuyeke.forum.common.ResultCode;
-import com.bitejiuyeke.forum.config.AppConfig;
-import com.bitejiuyeke.forum.model.User;
-import com.bitejiuyeke.forum.services.IUserService;
-import com.bitejiuyeke.forum.utils.MD5Util;
-import com.bitejiuyeke.forum.utils.StringUtil;
-import com.bitejiuyeke.forum.utils.UUIDUtil;
+import com.yb.forum.common.AppResult;
+import com.yb.forum.common.ResultCode;
+import com.yb.forum.config.AppConfig;
+import com.yb.forum.model.User;
+import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.MD5Util;
+import com.yb.forum.utils.StringUtil;
+import com.yb.forum.utils.UUIDUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

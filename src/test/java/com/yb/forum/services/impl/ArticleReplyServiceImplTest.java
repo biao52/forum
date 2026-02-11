@@ -1,7 +1,7 @@
-package com.bitejiuyeke.forum.services.impl;
+package com.yb.forum.services.impl;
 
-import com.bitejiuyeke.forum.model.ArticleReply;
-import com.bitejiuyeke.forum.services.IArticleReplyService;
+import com.yb.forum.model.ArticleReply;
+import com.yb.forum.services.IArticleReplyService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

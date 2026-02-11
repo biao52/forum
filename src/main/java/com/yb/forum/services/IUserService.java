@@ -1,7 +1,7 @@
-package com.bitejiuyeke.forum.services;
+package com.yb.forum.services;
 
 
-import com.bitejiuyeke.forum.model.User;
+import com.yb.forum.model.User;
 
 /**
  * 用户接口

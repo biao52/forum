@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bitejiuyeke.forum.dao.MessageMapper">
-  <resultMap id="BaseResultMap" type="com.bitejiuyeke.forum.model.Message">
+<mapper namespace="com.yb.forum.dao.MessageMapper">
+  <resultMap id="BaseResultMap" type="com.yb.forum.model.Message">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="postUserId" jdbcType="BIGINT" property="postUserId" />
     <result column="receiveUserId" jdbcType="BIGINT" property="receiveUserId" />
@@ -20,7 +20,7 @@
     from t_message
     where id = #{id,jdbcType=BIGINT}
   </select>
-  <insert id="insert" parameterType="com.bitejiuyeke.forum.model.Message" useGeneratedKeys="true" keyProperty="id">
+  <insert id="insert" parameterType="com.yb.forum.model.Message" useGeneratedKeys="true" keyProperty="id">
     insert into t_message (id, postUserId, receiveUserId, 
       content, state, deleteState, 
       createTime, updateTime)
@@ -28,7 +28,7 @@
       #{content,jdbcType=VARCHAR}, #{state,jdbcType=TINYINT}, #{deleteState,jdbcType=TINYINT}, 
       #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="com.bitejiuyeke.forum.model.Message" useGeneratedKeys="true" keyProperty="id">
+  <insert id="insertSelective" parameterType="com.yb.forum.model.Message" useGeneratedKeys="true" keyProperty="id">
     insert into t_message
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -83,7 +83,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.bitejiuyeke.forum.model.Message">
+  <update id="updateByPrimaryKeySelective" parameterType="com.yb.forum.model.Message">
     update t_message
     <set>
       <if test="postUserId != null">
@@ -110,7 +110,7 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.bitejiuyeke.forum.model.Message">
+  <update id="updateByPrimaryKey" parameterType="com.yb.forum.model.Message">
     update t_message
     set postUserId = #{postUserId,jdbcType=BIGINT},
       receiveUserId = #{receiveUserId,jdbcType=BIGINT},

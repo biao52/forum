@@ -1,6 +1,6 @@
-package com.bitejiuyeke.forum.services;
+package com.yb.forum.services;
 
-import com.bitejiuyeke.forum.model.Article;
+import com.yb.forum.model.Article;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;

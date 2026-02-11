@@ -5,7 +5,7 @@
 
 <generatorConfiguration>
     <!-- 驱动包路径，location中路径替换成自己本地路径 -->
-    <classPathEntry location="D:\database\jar\mysql-connector-java-5.1.49.jar"/>
+<!--    <classPathEntry location="D:\database\jar\mysql-connector-java-5.1.49.jar"/>-->
 
     <context id="DB2Tables" targetRuntime="MyBatis3">
         <!-- 禁用自动生成的注释 -->
@@ -15,8 +15,8 @@
         </commentGenerator>
 
         <!-- 连接配置 -->
-        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://127.0.0.1:3306/forum_db?characterEncoding=utf8&amp;useSSL=false"
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://127.0.0.1:3306/forum_db_001?characterEncoding=utf8&amp;useSSL=false"
                         userId="root"
                         password="123456">
         </jdbcConnection>
@@ -27,7 +27,7 @@
         </javaTypeResolver>
 
         <!-- 实体类生成位置 -->
-        <javaModelGenerator targetPackage="com.bitejiuyeke.forum.model" targetProject="src/main/java">
+        <javaModelGenerator targetPackage="com.yb.forum.model" targetProject="src/main/java">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
@@ -38,7 +38,7 @@
         </sqlMapGenerator>
 
         <!-- DAO类生成位置 -->
-        <javaClientGenerator type="XMLMAPPER" targetPackage="com.bitejiuyeke.forum.dao" targetProject="src/main/java">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.yb.forum.dao" targetProject="src/main/java">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 

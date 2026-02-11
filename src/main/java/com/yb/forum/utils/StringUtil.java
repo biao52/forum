@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.utils;
+package com.yb.forum.utils;
 
 /**
  * @Author 比特就业课

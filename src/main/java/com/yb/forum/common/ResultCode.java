@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.common;
+package com.yb.forum.common;
 
 public enum ResultCode {
     SUCCESS                     (0, "操作成功"),

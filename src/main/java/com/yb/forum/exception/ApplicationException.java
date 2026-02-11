@@ -1,6 +1,6 @@
-package com.bitejiuyeke.forum.exception;
+package com.yb.forum.exception;
 
-import com.bitejiuyeke.forum.common.AppResult;
+import com.yb.forum.common.AppResult;
 
 /**
  * 自定义异常

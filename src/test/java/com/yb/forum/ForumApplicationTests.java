@@ -1,7 +1,7 @@
-package com.bitejiuyeke.forum;
+package com.yb.forum;
 
-import com.bitejiuyeke.forum.dao.UserMapper;
-import com.bitejiuyeke.forum.model.User;
+import com.yb.forum.dao.UserMapper;
+import com.yb.forum.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

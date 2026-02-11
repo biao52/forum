@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bitejiuyeke.forum.dao.UserMapper">
+<mapper namespace="com.yb.forum.dao.UserMapper">
     <!--
         1. 注意namespace表示命名空间，指定要与 UserMapper.xml中的namespace相同
         2. 统一用com.bitejiuyeke.forum.dao.UserMapper, 也就是UserMapper的完全限定名(包名+类名)

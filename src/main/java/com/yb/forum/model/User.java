@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.model;
+package com.yb.forum.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;

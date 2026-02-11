@@ -1,8 +1,8 @@
-package com.bitejiuyeke.forum.controller;
+package com.yb.forum.controller;
 
-import com.bitejiuyeke.forum.common.AppResult;
-import com.bitejiuyeke.forum.exception.ApplicationException;
-import com.bitejiuyeke.forum.model.User;
+import com.yb.forum.common.AppResult;
+import com.yb.forum.exception.ApplicationException;
+import com.yb.forum.model.User;
 import io.swagger.annotations.*;
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.model;
+package com.yb.forum.model;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

@@ -1,12 +1,12 @@
-package com.bitejiuyeke.forum.dao;
+package com.yb.forum.dao;
 
-import com.bitejiuyeke.forum.model.Message;
+import com.yb.forum.model.Message;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-@Mapper
+//@Mapper
 public interface MessageMapper {
     int insert(Message row);
 

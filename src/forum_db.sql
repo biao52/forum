@@ -96,12 +96,12 @@ INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteSta
 (3, '前端技术', 0, 3, 0, 0, '2023-06-25 10:25:56', '2023-06-25 10:25:56');
 INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES
 (4, 'MySQL', 0, 4, 0, 0, '2023-06-25 19:05:22', '2023-06-25 19:05:22');
-INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (5, '面试宝典', 0, 5, 0, 0, '2023-06-25 19:05:22', '2023-06-25 19:05:22');
-INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (6, '经验分享', 0, 6, 0, 0, '2023-06-25 19:05:22', '2023-06-25 19:05:22');
+INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (5, '面试宝典', 0, 5, 0, 0, '2024-06-25 19:05:22', '2024-06-25 19:05:22');
+INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (6, '经验分享', 0, 6, 0, 0, '2024-06-25 19:05:22', '2024-06-25 19:05:22');
 INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES
 (7, '招聘信息', 0, 7, 0, 0, '2023-06-25 19:05:22', '2023-06-25 19:05:22');
-INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (8, '福利待遇', 0, 8, 0, 0, '2023-06-25 19:05:22', '2023-06-25 19:05:22');
-INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (9, '灌水区', 0, 9, 0, 0, '2023-06-25 19:05:22', '2023-06-25 19:05:22');
+INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (8, '福利待遇', 0, 8, 0, 0, '2024-06-25 19:05:22', '2024-06-25 19:05:22');
+INSERT INTO `t_board` (`id`, `name`, `articleCount`, `sort`, `state`, `deleteState`, `createTime`, `updateTime`) VALUES (9, '灌水区', 0, 9, 0, 0, '2024-06-25 19:05:22', '2024-06-25 19:05:22');
 
 
 

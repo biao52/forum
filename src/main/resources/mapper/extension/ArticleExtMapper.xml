@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bitejiuyeke.forum.dao.ArticleMapper">
+<mapper namespace="com.yb.forum.dao.ArticleMapper">
   <!-- 自定义结果集映映射 -->
-  <resultMap id="AllInfoResultMap" type="com.bitejiuyeke.forum.model.Article" extends="ResultMapWithBLOBs">
+  <resultMap id="AllInfoResultMap" type="com.yb.forum.model.Article" extends="ResultMapWithBLOBs">
     <!-- 关联的用户的映射 -->
-    <association property="user" resultMap="com.bitejiuyeke.forum.dao.UserMapper.BaseResultMap"
+    <association property="user" resultMap="com.yb.forum.dao.UserMapper.BaseResultMap"
                  columnPrefix="u_" />
     <!-- 关联版块的映射 -->
-    <association property="board" resultMap="com.bitejiuyeke.forum.dao.BoardMapper.BaseResultMap"
+    <association property="board" resultMap="com.yb.forum.dao.BoardMapper.BaseResultMap"
                  columnPrefix="b_" />
    </resultMap>
 

@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.config;
+package com.yb.forum.config;
 
 /**
  * 全局变量定义

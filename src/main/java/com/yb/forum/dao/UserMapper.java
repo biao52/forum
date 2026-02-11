@@ -1,10 +1,10 @@
-package com.bitejiuyeke.forum.dao;
+package com.yb.forum.dao;
 
-import com.bitejiuyeke.forum.model.User;
+import com.yb.forum.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-@Mapper
+//@Mapper
 public interface UserMapper {
     int insert(User row);
 

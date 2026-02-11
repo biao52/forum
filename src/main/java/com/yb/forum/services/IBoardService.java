@@ -1,6 +1,6 @@
-package com.bitejiuyeke.forum.services;
+package com.yb.forum.services;
 
-import com.bitejiuyeke.forum.model.Board;
+import com.yb.forum.model.Board;
 
 import java.util.List;
 

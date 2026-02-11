@@ -1,8 +1,11 @@
-package com.bitejiuyeke.forum;
+package com.yb.forum;
 
+import org.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.annotation.MapperScans;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@MapperScan("com.yb.forum.dao")
 @SpringBootApplication
 public class ForumApplication {
 

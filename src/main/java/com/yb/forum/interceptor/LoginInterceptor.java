@@ -1,6 +1,6 @@
-package com.bitejiuyeke.forum.interceptor;
+package com.yb.forum.interceptor;
 
-import com.bitejiuyeke.forum.config.AppConfig;
+import com.yb.forum.config.AppConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;

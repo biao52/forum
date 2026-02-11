@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -8,7 +8,7 @@
 		<version>2.7.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.bitejiuyeke</groupId>
+	<groupId>com.yb</groupId>
 	<artifactId>forum</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>forum</name>
@@ -25,7 +25,7 @@
 		<!-- 构建项目指定编码集 -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- 数据库驱动 -->
-		<mysql-connector.version>5.1.49</mysql-connector.version>
+		<mysql-connector.version>8.0.32</mysql-connector.version>
 		<!-- Mybatis依赖-->
 		<mybatis-starter.version>2.3.0</mybatis-starter.version>
 		<!-- 数据源 -->
@@ -58,11 +58,11 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Mysql驱动 -->
+		<!-- 临时回退为旧坐标，兼容8.0.32，避免下载失败 -->
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>${mysql-connector.version}</version>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<!-- Mybatis 依赖-->
 		<dependency>
@@ -111,7 +111,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- mybatis 生成器插件 -->
+			<!-- mybatis 生成器插件：修正执行阶段为compile -->
 			<plugin>
 				<groupId>org.mybatis.generator</groupId>
 				<artifactId>mybatis-generator-maven-plugin</artifactId>
@@ -119,7 +119,7 @@
 				<executions>
 					<execution>
 						<id>Generate MyBatis Artifacts</id>
-						<phase>deploy</phase>
+						<phase>compile</phase> <!-- 改为编译阶段，自动触发 -->
 						<goals>
 							<goal>generate</goal>
 						</goals>
@@ -131,15 +131,13 @@
 					<verbose>true</verbose>
 					<!-- 允许覆盖 -->
 					<overwrite>true</overwrite>
-					<!-- 配置文件路径 -->
+					<!-- 配置文件路径（你的路径正确，保留） -->
 					<configurationFile>
 						src/main/resources/mybatis/generatorConfig.xml
 					</configurationFile>
 				</configuration>
 			</plugin>
 		</plugins>
-
-
 	</build>
 
 </project>

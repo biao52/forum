@@ -1,4 +1,4 @@
-package com.bitejiuyeke.forum.utils;
+package com.yb.forum.utils;
 
 import java.util.UUID;
 

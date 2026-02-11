@@ -1,7 +1,7 @@
-package com.bitejiuyeke.forum.exception;
+package com.yb.forum.exception;
 
-import com.bitejiuyeke.forum.common.AppResult;
-import com.bitejiuyeke.forum.common.ResultCode;
+import com.yb.forum.common.AppResult;
+import com.yb.forum.common.ResultCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
