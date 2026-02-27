@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author 比特就业课
@@ -34,13 +36,17 @@ public class ArticleController {
     private IArticleService articleService;
     @Resource
     private IBoardService boardService;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
+    // Redis Key 前缀
+    private static final String ARTICLE_LIST_KEY = "article:list:";
+    private static final String ARTICLE_DETAIL_KEY = "article:detail:";
+    private static final String ARTICLE_USER_KEY = "article:user:";
+    private static final long CACHE_EXPIRE_TIME = 30; // 缓存过期时间（分钟）
 
     /**
      * 发布新帖子
-     * @param boardId 版块Id
-     * @param title 文章标题
-     * @param content 文章内容
-     * @return
      */
     @ApiOperation("发布新帖")
     @PostMapping("/create")
@@ -52,76 +58,117 @@ public class ArticleController {
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
         if (user.getState() == 1) {
-            // 用户已禁言
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
         // 版块的校验
         Board board = boardService.selectById(boardId.longValue());
         if (board == null || board.getDeleteState() == 1 || board.getState() == 1) {
-            // 打印日志
             log.warn(ResultCode.FAILED_BOARD_BANNED.toString());
-            // 返回响应
             return AppResult.failed(ResultCode.FAILED_BOARD_BANNED);
         }
         // 封装文章对象
         Article article = new Article();
-        article.setTitle(title); // 标题
-        article.setContent(content); // 正文
-        article.setBoardId(boardId); // 版块Id
-        article.setUserId(user.getId()); // 作者Id
+        article.setTitle(title);
+        article.setContent(content);
+        article.setBoardId(boardId);
+        article.setUserId(user.getId());
         // 调用Service
         articleService.create(article);
-        // 响应
+
+        // 清除相关缓存
+        clearArticleListCache(boardId);
+        clearArticleListCache(null); // 清除所有文章列表缓存
+
         return AppResult.success();
     }
 
-
     @ApiOperation("获取帖子列表")
     @GetMapping("/getAllByBoardId")
-    public AppResult<List<Article>> getAllByBoardId (@ApiParam("版块Id") @RequestParam(value = "boardId", required = false) Long boardId) {
+    public AppResult<List<Article>> getAllByBoardId (
+            @ApiParam("版块Id") @RequestParam(value = "boardId", required = false) Long boardId) {
 
-        // 定义返回的集合
-        List<Article> articles;
-        // 判断传入的参数是否为空
+        // 构造缓存key
+        String cacheKey = boardId == null ? ARTICLE_LIST_KEY + "all" : ARTICLE_LIST_KEY + boardId;
+
+        // 尝试从Redis获取缓存
+        List<Article> articles = (List<Article>) redisTemplate.opsForValue().get(cacheKey);
+
+        if (articles != null) {
+            log.info("从Redis缓存获取文章列表，boardId: {}", boardId);
+            return AppResult.success(articles);
+        }
+
+        // 缓存未命中，从数据库查询
+        log.info("从数据库查询文章列表，boardId: {}", boardId);
         if (boardId == null) {
-            // 如果传入的参数为空，查询所有
             articles = articleService.selectAll();
         } else {
-            // 如果传入的版块Id不为空，查询指定版块下的帖子列表
             articles = articleService.selectAllByBoardId(boardId);
         }
 
-        // 结果是否为空
         if (articles == null) {
-            // 如果结合集为空，那么创建上个空集合
             articles = new ArrayList<>();
         }
-        // 响应结果
+
+        // 存入Redis缓存
+        redisTemplate.opsForValue().set(cacheKey, articles, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+
         return AppResult.success(articles);
     }
-
 
     @ApiOperation("根据帖子Id获取详情")
     @GetMapping("/details")
     public AppResult<Article> getDetails (HttpServletRequest request,
-            @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
+                                          @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
+
+        // 构造缓存key
+        String cacheKey = ARTICLE_DETAIL_KEY + id;
+
+        // 尝试从Redis获取缓存
+        Article article = (Article) redisTemplate.opsForValue().get(cacheKey);
+
+        if (article != null) {
+            log.info("从Redis缓存获取文章详情，id: {}", id);
+            // 从session中获取当前登录的用户
+            HttpSession session = request.getSession(false);
+            User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+            // 判断当前用户是否为作者
+            if (user != null && user.getId() == article.getUserId()) {
+                article.setOwn(true);
+            }
+            return AppResult.success(article);
+        }
+
+        // 缓存未命中，从数据库查询
+        log.info("从数据库查询文章详情，id: {}", id);
         // 从session中获取当前登录的用户
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
 
-        // 调用Service，获取帖子详情
-        Article article = articleService.selectDetailById(id);
-        // 判断结果是否为空
+        article = articleService.selectDetailById(id);
         if (article == null) {
-            // 返回错误信息
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
         }
         // 判断当前用户是否为作者
         if (user.getId() == article.getUserId()) {
-            // 标识为作者
             article.setOwn(true);
         }
-        // 返回结果
+
+        // 存入Redis缓存（不缓存own字段，因为不同用户看到的不同）
+        Article cacheArticle = new Article();
+        cacheArticle.setId(article.getId());
+        cacheArticle.setTitle(article.getTitle());
+        cacheArticle.setContent(article.getContent());
+        cacheArticle.setBoardId(article.getBoardId());
+        cacheArticle.setUserId(article.getUserId());
+        cacheArticle.setLikeCount(article.getLikeCount());
+        cacheArticle.setCreateTime(article.getCreateTime());
+        cacheArticle.setUpdateTime(article.getUpdateTime());
+        cacheArticle.setState(article.getState());
+        cacheArticle.setDeleteState(article.getDeleteState());
+
+        redisTemplate.opsForValue().set(cacheKey, cacheArticle, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+
         return AppResult.success(article);
     }
 
@@ -136,32 +183,32 @@ public class ArticleController {
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
         // 校验用户状态
         if (user.getState() == 1) {
-            // 返回错误描述
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
         // 查询帖子详情
         Article article = articleService.selectById(id);
         // 校验帖子是否有效
         if (article == null) {
-            // 返回错误描述
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
         }
         // 判断用户是不是作者
         if (user.getId() != article.getUserId()) {
-            // 返回错误描述
             return AppResult.failed(ResultCode.FAILED_FORBIDDEN);
         }
         // 判断帖子的状态 - 已归档
         if (article.getState() == 1 || article.getDeleteState() == 1) {
-            // 返回错误描述
             return AppResult.failed(ResultCode.FAILED_ARTICLE_BANNED);
         }
 
         // 调用Service
         articleService.modify(id, title, content);
-        // 打印日志
+
+        // 清除相关缓存
+        clearArticleDetailCache(id);
+        clearArticleListCache(article.getBoardId());
+        clearArticleListCache(null);
+
         log.info("帖子更新成功. Article id = " + id + "User id = " + user.getId() + ".");
-        // 返回正确的结果
         return AppResult.success();
     }
 
@@ -174,12 +221,14 @@ public class ArticleController {
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
         // 判断用户是否被禁言
         if (user.getState() == 1) {
-            // 返回结果
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
         // 调用Service
         articleService.thumbsUpById(id);
-        // 返回结果
+
+        // 清除文章详情缓存（点赞数变化）
+        clearArticleDetailCache(id);
+
         return AppResult.success();
     }
 
@@ -191,14 +240,12 @@ public class ArticleController {
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
         if (user.getState() == 1) {
-            // 表示用户禁言
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
         // 查询帖子详情
         Article article = articleService.selectById(id);
         // 校验帖子状态
         if (article == null || article.getDeleteState() == 1) {
-            // 帖子已删除
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
         }
         // 校验当前登录的用户是不是作者
@@ -207,26 +254,76 @@ public class ArticleController {
         }
         // 调用Service
         articleService.deleteById(id);
-        // 返回操作成功
+
+        // 清除相关缓存
+        clearArticleDetailCache(id);
+        clearArticleListCache(article.getBoardId());
+        clearArticleListCache(null);
+        clearArticleUserCache(article.getUserId());
+
         return AppResult.success();
     }
 
     @ApiOperation("获取用户的帖子列表")
     @GetMapping("/getAllByUserId")
-    public AppResult<List<Article>> getAllByUserId (HttpServletRequest request ,
-                                     @ApiParam("用户Id") @RequestParam(value = "userId", required = false) Long userId) {
+    public AppResult<List<Article>> getAllByUserId (HttpServletRequest request,
+                                                    @ApiParam("用户Id") @RequestParam(value = "userId", required = false) Long userId) {
         // 如果UserId为空，那么从session中获取当前登录的用户Id
         if (userId == null) {
-            // 获取Session
             HttpSession session = request.getSession(false);
-            // 获取User对象
             User user = (User) session.getAttribute(AppConfig.USER_SESSION);
             userId = user.getId();
         }
-        // 调用Service
-        List<Article> articles = articleService.selectByUserId(userId);
-        // 返回结果
+
+        // 构造缓存key
+        String cacheKey = ARTICLE_USER_KEY + userId;
+
+        // 尝试从Redis获取缓存
+        List<Article> articles = (List<Article>) redisTemplate.opsForValue().get(cacheKey);
+
+        if (articles != null) {
+            log.info("从Redis缓存获取用户文章列表，userId: {}", userId);
+            return AppResult.success(articles);
+        }
+
+        // 缓存未命中，从数据库查询
+        log.info("从数据库查询用户文章列表，userId: {}", userId);
+        articles = articleService.selectByUserId(userId);
+
+        if (articles == null) {
+            articles = new ArrayList<>();
+        }
+
+        // 存入Redis缓存
+        redisTemplate.opsForValue().set(cacheKey, articles, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+
         return AppResult.success(articles);
     }
 
+    /**
+     * 清除文章列表缓存
+     */
+    private void clearArticleListCache(Long boardId) {
+        String key = boardId == null ? ARTICLE_LIST_KEY + "all" : ARTICLE_LIST_KEY + boardId;
+        redisTemplate.delete(key);
+        log.info("清除文章列表缓存: {}", key);
+    }
+
+    /**
+     * 清除文章详情缓存
+     */
+    private void clearArticleDetailCache(Long articleId) {
+        String key = ARTICLE_DETAIL_KEY + articleId;
+        redisTemplate.delete(key);
+        log.info("清除文章详情缓存: {}", key);
+    }
+
+    /**
+     * 清除用户文章列表缓存
+     */
+    private void clearArticleUserCache(Long userId) {
+        String key = ARTICLE_USER_KEY + userId;
+        redisTemplate.delete(key);
+        log.info("清除用户文章列表缓存: {}", key);
+    }
 }

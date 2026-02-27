@@ -32,6 +32,7 @@ public class AppInterceptorConfigurer implements WebMvcConfigurer {
                 .excludePathPatterns("/dist/**")        // 排除所有静态文件
                 .excludePathPatterns("/image/**")
                 .excludePathPatterns("/js/**")
+                .excludePathPatterns("/test/**")
                 .excludePathPatterns("/**.ico");
     }
 }
