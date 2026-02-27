@@ -18,14 +18,14 @@
     <result column="content" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, boardId, userId, title, visitCount, replyCount, likeCount, state, deleteState, 
+    id, boardId, userId, title, visitCount, replyCount, likeCount, state, deleteState,
     createTime, updateTime
   </sql>
   <sql id="Blob_Column_List">
     content
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
-    select 
+    select
     <include refid="Base_Column_List" />
     ,
     <include refid="Blob_Column_List" />
@@ -33,16 +33,16 @@
     where id = #{id,jdbcType=BIGINT}
   </select>
   <insert id="insert" parameterType="com.yb.forum.model.Article" useGeneratedKeys="true" keyProperty="id">
-    insert into t_article (id, boardId, userId, 
-      title, visitCount, replyCount, 
-      likeCount, state, deleteState, 
-      createTime, updateTime, content
-      )
-    values (#{id,jdbcType=BIGINT}, #{boardId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, 
-      #{title,jdbcType=VARCHAR}, #{visitCount,jdbcType=INTEGER}, #{replyCount,jdbcType=INTEGER}, 
-      #{likeCount,jdbcType=INTEGER}, #{state,jdbcType=TINYINT}, #{deleteState,jdbcType=TINYINT}, 
-      #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR}
-      )
+    insert into t_article (id, boardId, userId,
+                           title, visitCount, replyCount,
+                           likeCount, state, deleteState,
+                           createTime, updateTime, content
+    )
+    values (#{id,jdbcType=BIGINT}, #{boardId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT},
+            #{title,jdbcType=VARCHAR}, #{visitCount,jdbcType=INTEGER}, #{replyCount,jdbcType=INTEGER},
+            #{likeCount,jdbcType=INTEGER}, #{state,jdbcType=TINYINT}, #{deleteState,jdbcType=TINYINT},
+            #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR}
+           )
   </insert>
   <insert id="insertSelective" parameterType="com.yb.forum.model.Article" useGeneratedKeys="true" keyProperty="id">
     insert into t_article
@@ -165,30 +165,30 @@
   <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.yb.forum.model.Article">
     update t_article
     set boardId = #{boardId,jdbcType=BIGINT},
-      userId = #{userId,jdbcType=BIGINT},
-      title = #{title,jdbcType=VARCHAR},
-      visitCount = #{visitCount,jdbcType=INTEGER},
-      replyCount = #{replyCount,jdbcType=INTEGER},
-      likeCount = #{likeCount,jdbcType=INTEGER},
-      state = #{state,jdbcType=TINYINT},
-      deleteState = #{deleteState,jdbcType=TINYINT},
-      createTime = #{createTime,jdbcType=TIMESTAMP},
-      updateTime = #{updateTime,jdbcType=TIMESTAMP},
-      content = #{content,jdbcType=LONGVARCHAR}
+        userId = #{userId,jdbcType=BIGINT},
+        title = #{title,jdbcType=VARCHAR},
+        visitCount = #{visitCount,jdbcType=INTEGER},
+        replyCount = #{replyCount,jdbcType=INTEGER},
+        likeCount = #{likeCount,jdbcType=INTEGER},
+        state = #{state,jdbcType=TINYINT},
+        deleteState = #{deleteState,jdbcType=TINYINT},
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+        updateTime = #{updateTime,jdbcType=TIMESTAMP},
+        content = #{content,jdbcType=LONGVARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.yb.forum.model.Article">
     update t_article
     set boardId = #{boardId,jdbcType=BIGINT},
-      userId = #{userId,jdbcType=BIGINT},
-      title = #{title,jdbcType=VARCHAR},
-      visitCount = #{visitCount,jdbcType=INTEGER},
-      replyCount = #{replyCount,jdbcType=INTEGER},
-      likeCount = #{likeCount,jdbcType=INTEGER},
-      state = #{state,jdbcType=TINYINT},
-      deleteState = #{deleteState,jdbcType=TINYINT},
-      createTime = #{createTime,jdbcType=TIMESTAMP},
-      updateTime = #{updateTime,jdbcType=TIMESTAMP}
+        userId = #{userId,jdbcType=BIGINT},
+        title = #{title,jdbcType=VARCHAR},
+        visitCount = #{visitCount,jdbcType=INTEGER},
+        replyCount = #{replyCount,jdbcType=INTEGER},
+        likeCount = #{likeCount,jdbcType=INTEGER},
+        state = #{state,jdbcType=TINYINT},
+        deleteState = #{deleteState,jdbcType=TINYINT},
+        createTime = #{createTime,jdbcType=TIMESTAMP},
+        updateTime = #{updateTime,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

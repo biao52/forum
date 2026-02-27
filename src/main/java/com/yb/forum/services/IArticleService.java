@@ -1,11 +1,26 @@
 package com.yb.forum.services;
 
 import com.yb.forum.model.Article;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 public interface IArticleService {
+    /**
+     * 🔍 根据版块Id + 关键字搜索文章
+     * @param boardId 版块Id
+     * @param keyword 搜索关键字
+     * @return 文章列表
+     */
+    List<Article> selectByBoardIdAndKeyword( Long boardId, String keyword);
+
+    /**
+     * 🔍 根据关键字搜索文章（标题或内容）
+     * @param keyword 搜索关键字
+     * @return 文章列表
+     */
+    List<Article> selectByKeyword(String keyword);
 
 
     /**

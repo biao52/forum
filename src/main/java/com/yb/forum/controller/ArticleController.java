@@ -8,6 +8,7 @@ import com.yb.forum.model.Board;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IArticleService;
 import com.yb.forum.services.IBoardService;
+import com.yb.forum.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -84,51 +85,77 @@ public class ArticleController {
 
     @ApiOperation("获取帖子列表")
     @GetMapping("/getAllByBoardId")
-    public AppResult<List<Article>> getAllByBoardId (
-            @ApiParam("版块Id") @RequestParam(value = "boardId", required = false) Long boardId) {
+    public AppResult<List<Article>> getAllByBoardId(
+            @ApiParam("版块Id") @RequestParam(value = "boardId", required = false) Long boardId,
+            @ApiParam("搜索关键字") @RequestParam(value = "keyword", required = false) String keyword) {
 
-        // 构造缓存key
-        String cacheKey = boardId == null ? ARTICLE_LIST_KEY + "all" : ARTICLE_LIST_KEY + boardId;
+        // 🔑 构造缓存 Key（区分普通查询和关键字搜索）
+        String cacheKey;
+        if (StringUtil.isEmpty(keyword)) {
+            // 普通查询：按 boardId 缓存
+            cacheKey = boardId == null ? ARTICLE_LIST_KEY + "all" : ARTICLE_LIST_KEY + "board:" + boardId;
+        } else {
+            // 关键字搜索：单独缓存，避免污染普通列表
+            // 对 keyword 做处理：去除空格、转小写、替换特殊字符，保证 key 合法
+            String safeKeyword = keyword.trim().toLowerCase().replaceAll("[^a-z0-9\u4e00-\u9fa5]", "_");
+            cacheKey = boardId == null
+                    ? ARTICLE_LIST_KEY + "search:keyword:" + safeKeyword
+                    : ARTICLE_LIST_KEY + "search:board:" + boardId + ":keyword:" + safeKeyword;
+        }
 
-        // 尝试从Redis获取缓存
+        // 🔍 尝试从 Redis 获取缓存
         List<Article> articles = (List<Article>) redisTemplate.opsForValue().get(cacheKey);
 
         if (articles != null) {
-            log.info("从Redis缓存获取文章列表，boardId: {}", boardId);
+            log.info("✅ 从 Redis 缓存获取文章列表，cacheKey: {}", cacheKey);
             return AppResult.success(articles);
         }
 
-        // 缓存未命中，从数据库查询
-        log.info("从数据库查询文章列表，boardId: {}", boardId);
-        if (boardId == null) {
-            articles = articleService.selectAll();
+        // 🗄️ 缓存未命中，从数据库查询
+        log.info("🔎 从数据库查询文章列表，boardId: {}, keyword: {}", boardId, keyword);
+
+        if (StringUtil.isEmpty(keyword)) {
+            // 普通查询
+            if (boardId == null) {
+                articles = articleService.selectAll();
+            } else {
+                articles = articleService.selectAllByBoardId(boardId);
+            }
         } else {
-            articles = articleService.selectAllByBoardId(boardId);
+            // 🔍 关键字搜索（标题 OR 内容）
+            if (boardId == null) {
+                articles = articleService.selectByKeyword(keyword);
+            } else {
+                articles = articleService.selectByBoardIdAndKeyword(boardId, keyword);
+            }
         }
 
         if (articles == null) {
             articles = new ArrayList<>();
         }
 
-        // 存入Redis缓存
-        redisTemplate.opsForValue().set(cacheKey, articles, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+        // 💾 存入 Redis 缓存（搜索结果的缓存时间可以短一些）
+        long expireTime = StringUtil.isEmpty(keyword) ? CACHE_EXPIRE_TIME : 10; // 搜索缓存10分钟
+        redisTemplate.opsForValue().set(cacheKey, articles, expireTime, TimeUnit.MINUTES);
+        log.info("💾 缓存已更新，cacheKey: {}, expire: {}min", cacheKey, expireTime);
 
         return AppResult.success(articles);
     }
 
     @ApiOperation("根据帖子Id获取详情")
     @GetMapping("/details")
-    public AppResult<Article> getDetails (HttpServletRequest request,
-                                          @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
+    public AppResult<Article> getDetails(
+            HttpServletRequest request,
+            @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
 
-        // 构造缓存key
+        // 🔍 构造缓存key
         String cacheKey = ARTICLE_DETAIL_KEY + id;
 
-        // 尝试从Redis获取缓存
+        // 🔍 尝试从Redis获取缓存
         Article article = (Article) redisTemplate.opsForValue().get(cacheKey);
 
         if (article != null) {
-            log.info("从Redis缓存获取文章详情，id: {}", id);
+            log.info("✅ 从 Redis 缓存获取文章详情，id: {}", id);
             // 从session中获取当前登录的用户
             HttpSession session = request.getSession(false);
             User user = (User) session.getAttribute(AppConfig.USER_SESSION);
@@ -139,12 +166,12 @@ public class ArticleController {
             return AppResult.success(article);
         }
 
-        // 缓存未命中，从数据库查询
-        log.info("从数据库查询文章详情，id: {}", id);
-        // 从session中获取当前登录的用户
+        // 🗄️ 缓存未命中，从数据库查询
+        log.info("🔎 从数据库查询文章详情，id: {}", id);
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
 
+        // 调用 Service，获取帖子详情（包含 user 和 board 关联信息）
         article = articleService.selectDetailById(id);
         if (article == null) {
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
@@ -154,20 +181,29 @@ public class ArticleController {
             article.setOwn(true);
         }
 
-        // 存入Redis缓存（不缓存own字段，因为不同用户看到的不同）
+        // 💾 存入Redis缓存（缓存完整对象，包括 user 信息）
+        // ⚠️ 注意：不要设置 own 字段到缓存，因为不同用户看到的不同
         Article cacheArticle = new Article();
+        // 复制所有字段（包括 user）
         cacheArticle.setId(article.getId());
-        cacheArticle.setTitle(article.getTitle());
-        cacheArticle.setContent(article.getContent());
         cacheArticle.setBoardId(article.getBoardId());
         cacheArticle.setUserId(article.getUserId());
+        cacheArticle.setTitle(article.getTitle());
+        cacheArticle.setContent(article.getContent());
+        cacheArticle.setVisitCount(article.getVisitCount());
+        cacheArticle.setReplyCount(article.getReplyCount());
         cacheArticle.setLikeCount(article.getLikeCount());
-        cacheArticle.setCreateTime(article.getCreateTime());
-        cacheArticle.setUpdateTime(article.getUpdateTime());
         cacheArticle.setState(article.getState());
         cacheArticle.setDeleteState(article.getDeleteState());
+        cacheArticle.setCreateTime(article.getCreateTime());
+        cacheArticle.setUpdateTime(article.getUpdateTime());
+        // ✅ 重要：复制 user 对象
+        cacheArticle.setUser(article.getUser());
+        // ✅ 如果有 board 对象，也要复制
+        // cacheArticle.setBoard(article.getBoard());
 
         redisTemplate.opsForValue().set(cacheKey, cacheArticle, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+        log.info("💾 文章详情已缓存，id: {}", id);
 
         return AppResult.success(article);
     }

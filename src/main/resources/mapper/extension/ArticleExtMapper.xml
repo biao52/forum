@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yb.forum.dao.ArticleMapper">
-  <!-- 自定义结果集映映射 -->
+
+  <!-- 自定义结果集映射（关联用户+版块）-->
   <resultMap id="AllInfoResultMap" type="com.yb.forum.model.Article" extends="ResultMapWithBLOBs">
     <!-- 关联的用户的映射 -->
     <association property="user" resultMap="com.yb.forum.dao.UserMapper.BaseResultMap"
@@ -9,112 +10,178 @@
     <!-- 关联版块的映射 -->
     <association property="board" resultMap="com.yb.forum.dao.BoardMapper.BaseResultMap"
                  columnPrefix="b_" />
-   </resultMap>
+  </resultMap>
 
   <!-- 查询所有未被删除的帖子列表，不包含content -->
   <select id="selectAll" resultMap="AllInfoResultMap">
     select
-    u.id as u_id,
-    u.avatarUrl as u_avatarUrl,
-    u.nickname as u_nickname,
-    a.id,
-    a.boardId,
-    a.userId,
-    a.title,
-    a.visitCount,
-    a.replyCount,
-    a.likeCount,
-    a.state,
-    a.createTime,
-    a.updateTime
+      u.id as u_id,
+      u.avatarUrl as u_avatarUrl,
+      u.nickname as u_nickname,
+      a.id,
+      a.boardId,
+      a.userId,
+      a.title,
+      a.visitCount,
+      a.replyCount,
+      a.likeCount,
+      a.state,
+      a.createTime,
+      a.updateTime
     from
-    t_article a, t_user u
+      t_article a, t_user u
     where
-    a.userId = u.id
-    and a.deleteState = 0
+      a.userId = u.id
+      and a.deleteState = 0
     order by a.createTime desc
-    limit 0, 100
+      limit 0, 100
   </select>
 
   <!-- 根据版块ID查询所有未被删除的帖子列表，不包含content -->
   <select id="selectAllByBoardId" resultMap="AllInfoResultMap" parameterType="java.lang.Long">
     select
-    u.id as u_id,
-    u.avatarUrl as u_avatarUrl,
-    u.nickname as u_nickname,
-    a.id,
-    a.boardId,
-    a.userId,
-    a.title,
-    a.visitCount,
-    a.replyCount,
-    a.likeCount,
-    a.state,
-    a.createTime,
-    a.updateTime
+      u.id as u_id,
+      u.avatarUrl as u_avatarUrl,
+      u.nickname as u_nickname,
+      a.id,
+      a.boardId,
+      a.userId,
+      a.title,
+      a.visitCount,
+      a.replyCount,
+      a.likeCount,
+      a.state,
+      a.createTime,
+      a.updateTime
     from
-    t_article a, t_user u
+      t_article a, t_user u
     where
-    a.userId = u.id
-    and a.deleteState = 0
-    and a.boardId = #{boardId,jdbcType=BIGINT}
+      a.userId = u.id
+      and a.deleteState = 0
+      and a.boardId = #{boardId,jdbcType=BIGINT}
     order by a.createTime desc
-    limit 0, 100
+      limit 0, 100
   </select>
 
   <select id="selectDetailById" resultMap="AllInfoResultMap" parameterType="java.lang.Long">
     select
-    u.id as u_id,
-    u.avatarUrl as u_avatarUrl,
-    u.nickname as u_nickname,
-    u.gender as u_gender,
-    u.isAdmin as u_isAdmin,
-    u.state as u_state,
-    u.deleteState as u_deleteState,
-    b.id as b_id,
-    b.name as b_name,
-    b.state as b_state,
-    b.deleteState as b_deleteState,
-    a.id,
-    a.boardId,
-    a.userId,
-    a.title,
-    a.content,
-    a.visitCount,
-    a.replyCount,
-    a.likeCount,
-    a.state,
-    a.createTime,
-    a.updateTime
+      u.id as u_id,
+      u.avatarUrl as u_avatarUrl,
+      u.nickname as u_nickname,
+      u.gender as u_gender,
+      u.isAdmin as u_isAdmin,
+      u.state as u_state,
+      u.deleteState as u_deleteState,
+      b.id as b_id,
+      b.name as b_name,
+      b.state as b_state,
+      b.deleteState as b_deleteState,
+      a.id,
+      a.boardId,
+      a.userId,
+      a.title,
+      a.content,
+      a.visitCount,
+      a.replyCount,
+      a.likeCount,
+      a.state,
+      a.createTime,
+      a.updateTime
     from
-    t_article a, t_user u, t_board b
+      t_article a, t_user u, t_board b
     where
-    a.userId = u.id
-    and
-    a.boardId = b.id
-    and a.deleteState = 0
-    and a.id = #{id,jdbcType=BIGINT}
+      a.userId = u.id
+      and
+      a.boardId = b.id
+      and a.deleteState = 0
+      and a.id = #{id,jdbcType=BIGINT}
   </select>
 
   <!-- 根据用户Id查询帖子列表 -->
   <select id="selectByUserId" resultMap="AllInfoResultMap" parameterType="java.lang.Long">
     select
-    b.id as b_id,
-    b.name as b_name,
-    a.id,
-    a.boardId,
-    a.userId,
-    a.title,
-    a.visitCount,
-    a.replyCount,
-    a.likeCount,
-    a.state,
-    a.createTime,
-    a.updateTime
+      b.id as b_id,
+      b.name as b_name,
+      a.id,
+      a.boardId,
+      a.userId,
+      a.title,
+      a.visitCount,
+      a.replyCount,
+      a.likeCount,
+      a.state,
+      a.createTime,
+      a.updateTime
     from t_article a, t_board b
     where a.boardId = b.id
-    and a.deleteState = 0
-    and a.userId = #{userId,jdbcType=BIGINT}
+      and a.deleteState = 0
+      and a.userId = #{userId,jdbcType=BIGINT}
     order by a.createTime desc
   </select>
+
+  <!-- ==================== 🔍 新增：关键字搜索功能 ==================== -->
+
+  <!-- 🔍 根据关键字搜索文章（标题或内容），返回包含用户信息的列表 -->
+  <select id="selectByKeyword" resultMap="AllInfoResultMap" parameterType="java.lang.String">
+    select
+      u.id as u_id,
+      u.avatarUrl as u_avatarUrl,
+      u.nickname as u_nickname,
+      a.id,
+      a.boardId,
+      a.userId,
+      a.title,
+      a.visitCount,
+      a.replyCount,
+      a.likeCount,
+      a.state,
+      a.createTime,
+      a.updateTime
+    from
+      t_article a, t_user u
+    where
+      a.userId = u.id
+      and a.deleteState = 0
+      and a.state = 0
+      and (
+          a.title LIKE CONCAT('%', #{keyword}, '%')
+        OR
+          a.content LIKE CONCAT('%', #{keyword}, '%')
+      )
+    order by a.createTime desc
+      limit 0, 100
+  </select>
+
+  <!-- 🔍 根据版块Id + 关键字搜索文章，返回包含用户信息的列表 -->
+  <select id="selectByBoardIdAndKeyword" resultMap="AllInfoResultMap">
+    select
+      u.id as u_id,
+      u.avatarUrl as u_avatarUrl,
+      u.nickname as u_nickname,
+      a.id,
+      a.boardId,
+      a.userId,
+      a.title,
+      a.visitCount,
+      a.replyCount,
+      a.likeCount,
+      a.state,
+      a.createTime,
+      a.updateTime
+    from
+      t_article a, t_user u
+    where
+      a.userId = u.id
+      and a.deleteState = 0
+      and a.state = 0
+      and a.boardId = #{boardId,jdbcType=BIGINT}
+      and (
+          a.title LIKE CONCAT('%', #{keyword}, '%')
+        OR
+          a.content LIKE CONCAT('%', #{keyword}, '%')
+      )
+    order by a.createTime desc
+      limit 0, 100
+  </select>
+
 </mapper>

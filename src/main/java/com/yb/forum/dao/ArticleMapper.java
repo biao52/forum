@@ -47,5 +47,22 @@ public interface ArticleMapper {
      */
     List<Article> selectByUserId (@Param("userId") Long userId);
 
+    // ==================== 🔍 新增：关键字搜索方法 ====================
+
+    /**
+     * 🔍 根据关键字搜索文章（标题或内容）
+     * @param keyword 搜索关键字
+     * @return 文章列表
+     */
+    List<Article> selectByKeyword(@Param("keyword") String keyword);
+
+    /**
+     * 🔍 根据版块Id + 关键字搜索文章
+     * @param boardId 版块Id
+     * @param keyword 搜索关键字
+     * @return 文章列表
+     */
+    List<Article> selectByBoardIdAndKeyword(@Param("boardId") Long boardId,
+                                            @Param("keyword") String keyword);
 
 }

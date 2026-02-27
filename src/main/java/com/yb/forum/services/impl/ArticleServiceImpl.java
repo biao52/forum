@@ -336,5 +336,39 @@ public class ArticleServiceImpl implements IArticleService {
             throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
         }
     }
+// ==================== 🔍 新增：关键字搜索方法实现 ====================
+
+    @Override
+    public List<Article> selectByKeyword(String keyword) {
+        // 非空校验
+        if (StringUtil.isEmpty(keyword)) {
+            // 打印日志
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        // 调用DAO
+        List<Article> articles = articleMapper.selectByKeyword(keyword);
+        // 返回结果
+        return articles;
+    }
+
+    @Override
+    public List<Article> selectByBoardIdAndKeyword(Long boardId, String keyword) {
+        // 非空校验
+        if (boardId == null || boardId <= 0 || StringUtil.isEmpty(keyword)) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        // 校验版块是否存在
+        Board board = boardService.selectById(boardId);
+        if (board == null) {
+            log.warn(ResultCode.FAILED_BOARD_NOT_EXISTS.toString() + ", board id = " + boardId);
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_BOARD_NOT_EXISTS));
+        }
+        // 调用扩展 Mapper
+        List<Article> articles = articleMapper.selectByBoardIdAndKeyword(boardId, keyword);
+        return articles;
+    }
 
 }
