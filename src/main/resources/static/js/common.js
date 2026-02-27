@@ -7,6 +7,13 @@ let profileUserId;  // 查看个人信息
 
 // ============================ 处理导航激活效果 ===========================
 function changeNavActive (boardItem) {
+
+    // 每次切换版块 / 回到首页时，清空搜索关键字
+    if ($('#index_search_input').length > 0) {
+        $('#index_search_input').val('');
+        console.log("已经清空关键字");
+    }
+
     // 判断当前是否为激活状态
     if (boardItem.hasClass('active') == false) {
       let activeLiEl = $('#topBoardList>.active');
@@ -40,3 +47,5 @@ function setMessageReceiveUserInfo (userId, nickname) {
   $('#index_message_receive_user_name').html('发送给: <strong>' + nickname + '</strong>');
   console.log('value = ' + $('#index_message_receive_user_id').val());
 }
+
+//

@@ -44,7 +44,7 @@
           <!-- 搜索框 -->
           <div class="nav-item d-none d-md-flex me-3">
             <div class="my-2 my-md-0 flex-grow-1 flex-md-grow-0 order-first order-md-last">
-              <form action="./" method="get" autocomplete="off" novalidate>
+              <form  autocomplete="off" novalidate id="index_search_form">
                 <div class="input-icon">
                   <span class="input-icon-addon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
@@ -55,7 +55,8 @@
                     </svg>
                   </span>
                   <input type="text" value="" class="form-control" placeholder="输入关键字..."
-                    aria-label="Search in website">
+                    aria-label="Search in website" id="index_search_input" name="keyword"
+                  >
                 </div>
               </form>
             </div>
@@ -307,6 +308,24 @@
 <script src="./dist/libs/tinymce/tinymce.min.js" defer></script>
 <script>
   $(function () {
+    // ========================= 顶部搜索框：提交事件 =======================
+    function Index_Search_Form () {
+      let keyword = $('#index_search_input').val().trim();
+      console.log('搜索关键字 = ', keyword);
+
+      if (!keyword) {
+        buildArticleList();
+        return;
+      }
+      buildArticleList();
+    }
+
+    // 只拦截 submit，防止刷新，并执行搜索逻辑
+    $('#index_search_form').on('submit', function (e) {
+      e.preventDefault();    // 一定要有
+      Index_Search_Form();   // 真正干事的地方
+    });
+
     //========================= 获取用户信息 =======================
     // 成功后，手动设置用户信息
     // $('#index_nav_avatar').css('background-image', 'url(' + user.avatarUrl + ')');

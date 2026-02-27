@@ -67,7 +67,8 @@
     // 构造query string
     let queryString = '';
     let boardData = activeLiEl.data('board');
-    // 导航栏版块Item是否绑定版块数据
+
+    // 1. 先看是否选中了某个版块
     if (boardData) {
       // 构造query string 
       queryString = '?boardId=' + boardData.id;
@@ -78,6 +79,7 @@
       $('#article_list_board_title').html('首页');
       $('#article_list_count_board').hide();
     }
+
 
     // ========================= 获取版块信息 =======================
     function getBoardInfo (boardId) {
@@ -116,11 +118,31 @@
       });
     }
 
+    // 2. 再读取顶部搜索框中的关键字（注意：这个输入框在 index.html 里）
+    let keyword = $('#index_search_input').val();
+    if (keyword) {
+      keyword = keyword.trim();
+    }
+    if (keyword) {
+      // 有关键字时，拼接到 queryString 中
+      if (queryString) {
+        // 已经有 ?boardId=xxx 了，就在后面追加 &keyword=...
+        queryString += '&keyword=' + encodeURIComponent(keyword);
+      } else {
+        // 没有任何参数，就直接从 ?keyword=... 开始
+        queryString = '?keyword=' + encodeURIComponent(keyword);
+      }
+
+      // 额外：把标题改成“搜索结果：xxx”，给用户一个反馈
+      $('#article_list_board_title').html('搜索结果：' + keyword);
+    }
+    console.log('最终请求 URL = article/getAllByBoardId' + queryString);
     // ========================= 获取帖子列表 =======================
     // 成功后，调用listBuildArticleList()方法，构建帖子列表
     $.ajax({
       type : 'get',
       url : 'article/getAllByBoardId' + queryString,
+
       // 回调
       success : function (respData) {
         if (respData.code == 0) {
