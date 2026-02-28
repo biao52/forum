@@ -34,7 +34,6 @@
       a.userId = u.id
       and a.deleteState = 0
     order by a.createTime desc
-      limit 0, 100
   </select>
 
   <!-- 根据版块ID查询所有未被删除的帖子列表，不包含content -->
@@ -60,7 +59,6 @@
       and a.deleteState = 0
       and a.boardId = #{boardId,jdbcType=BIGINT}
     order by a.createTime desc
-      limit 0, 100
   </select>
 
   <select id="selectDetailById" resultMap="AllInfoResultMap" parameterType="java.lang.Long">
@@ -149,7 +147,6 @@
           a.content LIKE CONCAT('%', #{keyword}, '%')
       )
     order by a.createTime desc
-      limit 0, 100
   </select>
 
   <!-- 🔍 根据版块Id + 关键字搜索文章，返回包含用户信息的列表 -->
@@ -181,7 +178,6 @@
           a.content LIKE CONCAT('%', #{keyword}, '%')
       )
     order by a.createTime desc
-      limit 0, 100
   </select>
 
 </mapper>
