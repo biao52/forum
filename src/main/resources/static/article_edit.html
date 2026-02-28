@@ -31,7 +31,7 @@
 
             <!-- 标题 -->
             <div class="row">
-              
+
               <div class="col-2">
                 <h2 class="mb-4">标题</h2>
               </div>
@@ -62,8 +62,8 @@
                 <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
                   <a href="javascript:void(0);" class="btn btn-tabler w-100" id="edit_article_submit">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24"
-                      height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                      stroke-linecap="round" stroke-linejoin="round">
+                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                       <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
                       <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
@@ -96,8 +96,20 @@
           let article = respData.data;
           // 0. 设置帖子id
           $('#edit_article_id').val(article.id);
-          // 1. 设置版块名
-          $('#edit_article_board_name').html(article.board.name);
+          // 1. 设置版块名（后端可能只返回 boardId，需要兼容两种情况）
+          if (article.board && article.board.name) {
+            $('#edit_article_board_name').html(article.board.name);
+          } else if (article.boardId) {
+            $.ajax({
+              type: 'get',
+              url: 'board/getById?id=' + article.boardId,
+              success: function (boardResp) {
+                if (boardResp.code === 0 && boardResp.data && boardResp.data.name) {
+                  $('#edit_article_board_name').html(boardResp.data.name);
+                }
+              }
+            });
+          }
           // 2. 设置标题
           $('#edit_article_title').val(article.title); // 设置input的内容用的是val()
           // 3. 设置正文
@@ -106,137 +118,137 @@
         } else {
           // 失败
           $.toast({
-              heading: '警告',
-              text: respData.message,
-              icon: 'warning'
+            heading: '警告',
+            text: respData.message,
+            icon: 'warning'
           });
         }
       },
       error : function () {
         // 提示信息
         $.toast({
-            heading: '错误',
-            text: '访问出现问题，请与管理员联系.',
-            icon: 'error'
+          heading: '错误',
+          text: '访问出现问题，请与管理员联系.',
+          icon: 'error'
         });
       }
 
     });
-    
+
     // ========================== 初始化编辑器 ========================== 
     var editor;
     function initEditor (md) {
       console.log('编辑区内容：' + md);
       editor = editormd("edit_article_content_area", {
-      width: "100%",
-      height: "100%",
-      // theme : "dark",
-      // previewTheme : "dark",
-      // editorTheme : "pastel-on-dark",
-      codeFold: true,
-      markdown : md, // 处理编辑区内容
-      //syncScrolling : false,
-      saveHTMLToTextarea: true,    // 保存 HTML 到 Textarea
-      searchReplace: true,
-      watch : true,                    // 实时预览
-      htmlDecode: "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启    
-      // toolbar  : false,             //关闭工具栏
-      // previewCodeHighlight : false, // 关闭预览 HTML 的代码块高亮，默认开启
-      emoji: true,
-      taskList: true,
-      tocm: true,         // Using [TOCM]
-      tex: true,                     // 开启科学公式TeX语言支持，默认关闭
-      // flowChart: true,               // 开启流程图支持，默认关闭
-      // sequenceDiagram: true,         // 开启时序/序列图支持，默认关闭,
-      placeholder: '开始创作...',     // 占位符
-      path: "./dist/editor.md/lib/"
-    });
+        width: "100%",
+        height: "100%",
+        // theme : "dark",
+        // previewTheme : "dark",
+        // editorTheme : "pastel-on-dark",
+        codeFold: true,
+        markdown : md, // 处理编辑区内容
+        //syncScrolling : false,
+        saveHTMLToTextarea: true,    // 保存 HTML 到 Textarea
+        searchReplace: true,
+        watch : true,                    // 实时预览
+        htmlDecode: "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+        // toolbar  : false,             //关闭工具栏
+        // previewCodeHighlight : false, // 关闭预览 HTML 的代码块高亮，默认开启
+        emoji: true,
+        taskList: true,
+        tocm: true,         // Using [TOCM]
+        tex: true,                     // 开启科学公式TeX语言支持，默认关闭
+        // flowChart: true,               // 开启流程图支持，默认关闭
+        // sequenceDiagram: true,         // 开启时序/序列图支持，默认关闭,
+        placeholder: '开始创作...',     // 占位符
+        path: "./dist/editor.md/lib/"
+      });
     }
 
     // ========================== 处理提交修改事件 ========================== 
     $('#edit_article_submit').click(function () {
-        // ID
-        let articleIdEl = $('#edit_article_id');
-        if (!articleIdEl.val()) {
-          // 提示
-          $.toast({
-              heading: '提示',
-              text: '帖子状态异常',
-              icon: 'warning'
-          });
-          return;
-        }
-
-        // 标题
-        let articleTitleEl = $('#edit_article_title');
-        if (!articleTitleEl.val()) {
-          // 获取焦点
-          articleTitleEl.focus();
-          // 提示
-          $.toast({
-              heading: '提示',
-              text: '请输入帖子标题',
-              icon: 'warning'
-          });
-          return;
-        }
-        // content
-        let articleContentEl = $('#edit_article_content');
-        // 非空校验
-        if (!articleContentEl.val()) {
-          // 提示
-          $.toast({
-              heading: '提示',
-              text: '请输入帖子内容',
-              icon: 'warning'
-          });
-          return;
+      // ID
+      let articleIdEl = $('#edit_article_id');
+      if (!articleIdEl.val()) {
+        // 提示
+        $.toast({
+          heading: '提示',
+          text: '帖子状态异常',
+          icon: 'warning'
+        });
+        return;
       }
 
-        // 构造修改对象
-        let postData = {
-          id : articleIdEl.val(),
-          title : articleTitleEl.val(),
-          content : articleContentEl.val()
-        };
+      // 标题
+      let articleTitleEl = $('#edit_article_title');
+      if (!articleTitleEl.val()) {
+        // 获取焦点
+        articleTitleEl.focus();
+        // 提示
+        $.toast({
+          heading: '提示',
+          text: '请输入帖子标题',
+          icon: 'warning'
+        });
+        return;
+      }
+      // content
+      let articleContentEl = $('#edit_article_content');
+      // 非空校验
+      if (!articleContentEl.val()) {
+        // 提示
+        $.toast({
+          heading: '提示',
+          text: '请输入帖子内容',
+          icon: 'warning'
+        });
+        return;
+      }
 
-        // 发送修改请求, 成功后跳转至首页changeNavActive($('#nav_board_index'));
-        $.ajax({
-          type : 'post',
-          url : 'article/modify',
-          contentType : 'application/x-www-form-urlencoded',
-          data : postData,
-          // 回调
-          success : function (respData) {
-            if (respData.code == 0) {
-              // 成功
-              $.toast({
-                  heading: '成功',
-                  text: '修改成功',
-                  icon: 'success'
-              });
-              // 跳转到主页列表
-              changeNavActive($('#nav_board_index'));
-            } else {
-              // 失败
-              $.toast({
-                  heading: '警告',
-                  text: respData.message,
-                  icon: 'warning'
-              });
-            }
-          },
-          error : function () {
+      // 构造修改对象
+      let postData = {
+        id : articleIdEl.val(),
+        title : articleTitleEl.val(),
+        content : articleContentEl.val()
+      };
+
+      // 发送修改请求, 成功后跳转至首页changeNavActive($('#nav_board_index'));
+      $.ajax({
+        type : 'post',
+        url : 'article/modify',
+        contentType : 'application/x-www-form-urlencoded',
+        data : postData,
+        // 回调
+        success : function (respData) {
+          if (respData.code == 0) {
+            // 成功
             $.toast({
-                heading: '错误',
-                text: '访问出现问题，请与管理员联系.',
-                icon: 'error'
+              heading: '成功',
+              text: '修改成功',
+              icon: 'success'
+            });
+            // 跳转到主页列表
+            changeNavActive($('#nav_board_index'));
+          } else {
+            // 失败
+            $.toast({
+              heading: '警告',
+              text: respData.message,
+              icon: 'warning'
             });
           }
+        },
+        error : function () {
+          $.toast({
+            heading: '错误',
+            text: '访问出现问题，请与管理员联系.',
+            icon: 'error'
+          });
+        }
 
-        });
+      });
     });
-    
+
   });
 
 </script>

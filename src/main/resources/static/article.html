@@ -17,17 +17,8 @@
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label"><strong>版块</strong></label>
-          <select id="article_post_borad" type="text" class="form-select" placeholder="Select a date" id="select-tags"
-            value="">
-            <option value="1" selected>JAVA</option>
-            <option value="2">C++</option>
-            <option value="3">前端技术</option>
-            <option value="4">MySQL</option>
-            <option value="5">面试宝典</option>
-            <option value="6">经验分享</option>
-            <option value="7">招聘信息</option>
-            <option value="8">福利待遇</option>
-            <option value="9">灌水区</option>
+          <select id="article_post_borad" type="text" class="form-select" placeholder="Select a date">
+            <!-- 版块选项由脚本动态加载 -->
           </select>
         </div>
         <div class="mb-3">
@@ -45,8 +36,8 @@
       <div class="card-footer bg-transparent mt-auto">
         <div class="btn-list justify-content-end">
           <a id="article_post_submit" href="javascript:void(0);" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" 
-              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                 stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
               <path d="M5 12l5 5l10 -10"></path>
             </svg>
@@ -61,6 +52,44 @@
 <!-- 初始化编辑器 -->
 <script type="text/javascript">
   $(function () {
+    // ================== 动态加载版块列表 =======================
+    let boardSelectEl = $('#article_post_borad');
+    $.ajax({
+      type: 'get',
+      url: 'board/topList',
+      success: function (respData) {
+        if (respData.code === 0) {
+          boardSelectEl.html('');
+          let boards = respData.data || [];
+          boards.forEach(function (board) {
+            let optionEl = $('<option></option>')
+                    .val(board.id)
+                    .text(board.name);
+            boardSelectEl.append(optionEl);
+          });
+          // 如果当前导航有选中的版块，则默认选中该版块
+          let activeLiEl = $('#topBoardList>.active');
+          let activeBoard = activeLiEl.data('board');
+          if (activeBoard && activeBoard.id) {
+            boardSelectEl.val(activeBoard.id);
+          }
+        } else {
+          $.toast({
+            heading: '警告',
+            text: respData.message,
+            icon: 'warning'
+          });
+        }
+      },
+      error: function () {
+        $.toast({
+          heading: '错误',
+          text: '获取版块列表失败，请与管理员联系.',
+          icon: 'error'
+        });
+      }
+    });
+
     var editor = editormd("edit-article", {
       width: "100%",
       height: "100%",
@@ -96,18 +125,18 @@
         titleEl.focus();
         // 提示
         $.toast({
-            heading: '提示',
-            text: '请输入帖子标题',
-            icon: 'warning'
+          heading: '提示',
+          text: '请输入帖子标题',
+          icon: 'warning'
         });
         return;
       }
       if (!contentEl.val()) {
         // 提示
         $.toast({
-            heading: '提示',
-            text: '请输入帖子内容',
-            icon: 'warning'
+          heading: '提示',
+          text: '请输入帖子内容',
+          icon: 'warning'
         });
         return;
       }
@@ -118,7 +147,7 @@
         title : titleEl.val(),
         content : contentEl.val()
       };
-      
+
       // 提交, 成功后调用changeNavActive($('#nav_board_index'));回到首页并加载帖子列表
       // contentType: 'application/x-www-form-urlencoded'
       $.ajax({
@@ -131,21 +160,21 @@
           if (respData.code == 0) {
             // 提示信息
             $.toast({
-                heading: '成功',
-                text: '发帖成功',
-                icon: 'success'
+              heading: '成功',
+              text: '发帖成功',
+              icon: 'success'
             });
             // 发布成功
             changeNavActive($('#nav_board_index'));
           } else {
             // 提示信息
             $.toast({
-                heading: '警告',
-                text: respData.message,
-                icon: 'warning'
+              heading: '警告',
+              text: respData.message,
+              icon: 'warning'
             });
           }
-        }, 
+        },
         error : function () {
           // 提示信息
           $.toast({
