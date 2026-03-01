@@ -5,7 +5,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 /**
  * 用于MD5加密的工具类
  *
- * @Author 比特就业课
+ * @Author yangbiao
  */
 
 public class MD5Util {

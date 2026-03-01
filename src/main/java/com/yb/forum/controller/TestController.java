@@ -8,7 +8,7 @@ import lombok.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 @Api(tags = "测试类的相关接口")
 //  表示返回的结果是数据

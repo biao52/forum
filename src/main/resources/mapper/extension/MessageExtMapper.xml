@@ -8,7 +8,6 @@
     <!-- 关联发送者对象-->
     <association property="postUser" resultMap="com.yb.forum.dao.UserMapper.BaseResultMap"
                  columnPrefix="u_" />
-
   </resultMap>
 
   <!-- 根据用户Id查询该用户未读数量 -->

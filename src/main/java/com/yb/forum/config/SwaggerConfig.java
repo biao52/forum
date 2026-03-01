@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * Swagger配置类
  *
- * @Author 比特就业课
+ * @Author yangbiao
  */
 // 配置类
 @Configuration
@@ -45,7 +45,7 @@ public class SwaggerConfig {
         Docket docket = new Docket(DocumentationType.OAS_30)
                 .apiInfo(apiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.bitejiuyeke.forum.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.yb.forum.controller"))
                 .paths(PathSelectors.any())
                 .build();
         return docket;
@@ -55,9 +55,8 @@ public class SwaggerConfig {
     // 配置API基本信息
     private ApiInfo apiInfo() {
         ApiInfo apiInfo = new ApiInfoBuilder()
-                .title("Bit论坛系统API")
-                .description("Bit论坛系统前后端分离API测试")
-                .contact(new Contact("Bit Tech", "https://edu.bitejiuyeke.com", "1598896550@qq.com"))
+                .title("论坛系统API")
+                .description("论坛系统前后端分离API测试")
                 .version("1.0")
                 .build();
         return apiInfo;

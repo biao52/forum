@@ -20,7 +20,7 @@ import javax.servlet.http.HttpSession;
 import java.util.List;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 @Slf4j
 @Api(tags = "站内信接口")

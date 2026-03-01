@@ -22,7 +22,7 @@ import javax.servlet.http.HttpSession;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 @Api(tags = "用户接口")
 @Slf4j

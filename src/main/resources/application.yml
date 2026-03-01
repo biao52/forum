@@ -39,7 +39,7 @@ logging:
     dateformat: yyyy-MM-dd HH:mm:ss #  日期的显示格式
   level:
     root: info # 日志的默认级别
-#    com.bitejiuyeke.forum: debug # 指定包下的日志级别
+#    com.yb.forum: debug # 指定包下的日志级别
   file:
     path: /log/forum_001 # 生产环境的日志目录
 #    path: D:/log/bit_forum # 日志保存的路径

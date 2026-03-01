@@ -3,7 +3,7 @@ package com.yb.forum.config;
 /**
  * 全局变量定义
  *
- * @Author 比特就业课
+ * @Author yangbiao
  */
 
 public class AppConfig {

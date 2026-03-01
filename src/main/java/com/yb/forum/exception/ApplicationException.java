@@ -5,7 +5,7 @@ import com.yb.forum.common.AppResult;
 /**
  * 自定义异常
  *
- * @Author 比特就业课
+ * @Author yangbiao
  */
 
 public class ApplicationException extends RuntimeException {

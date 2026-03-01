@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.annotation.Resource;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 // 表示一个配置类
 @Configuration

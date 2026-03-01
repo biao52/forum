@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 
 public interface IArticleReplyService {

@@ -6,11 +6,11 @@ import org.springframework.context.annotation.Configuration;
 /**
  * 配置Mybatis的扫描路径
  *
- * @Author 比特就业课
+ * @Author yangbiao
  */
-// 加入Spring
+// 加入 Spring
 @Configuration
 // 具体的配置
-@MapperScan("com.bitejiuyeke.forum.dao")
+@MapperScan("com.yb.forum.dao")
 public class MybatisConfig {
 }

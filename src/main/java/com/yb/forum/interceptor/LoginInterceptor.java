@@ -12,7 +12,7 @@ import javax.servlet.http.HttpSession;
 /**
  * 登录拦截器
  *
- * @Author 比特就业课
+ * @Author yangbiao
  */
 @Component
 public class LoginInterceptor implements HandlerInterceptor {

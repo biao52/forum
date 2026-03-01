@@ -1,7 +1,7 @@
 package com.yb.forum.utils;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 
 public class StringUtil {

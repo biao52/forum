@@ -3,7 +3,7 @@ package com.yb.forum.utils;
 import java.util.UUID;
 
 /**
- * @Author 比特就业课
+ * @Author yangbiao
  */
 
 public class UUIDUtil {
