@@ -3,15 +3,16 @@ package com.yb.forum.controller;
 import com.yb.forum.common.AppResult;
 import com.yb.forum.common.ResultCode;
 import com.yb.forum.config.AppConfig;
+import com.yb.forum.exception.ApplicationException;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IUserService;
 import com.yb.forum.utils.MD5Util;
 import com.yb.forum.utils.StringUtil;
 import com.yb.forum.utils.UUIDUtil;
+import com.yb.forum.utils.ValidationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -40,16 +41,75 @@ public class UserController {
 
     @ApiOperation("用户注册")
     @PostMapping("/register")
-    public AppResult register (@ApiParam("用户名") @RequestParam("username") @NonNull String username,
-                               @ApiParam("昵称") @RequestParam("nickname") @NonNull String nickname,
-                               @ApiParam("密码") @RequestParam("password") @NonNull String password,
-                               @ApiParam("确认密码") @RequestParam("passwordRepeat") @NonNull String passwordRepeat) {
-        // 校验密码与重复密码是否相同
+    public AppResult register (@ApiParam("用户名") @RequestParam(value = "username", required = false) String username,
+                               @ApiParam("昵称") @RequestParam(value = "nickname", required = false) String nickname,
+                               @ApiParam("密码") @RequestParam(value = "password", required = false) String password,
+                               @ApiParam("确认密码") @RequestParam(value = "passwordRepeat", required = false) String passwordRepeat) {
+        // 1. 检查必要参数是否存在（null 检查）
+        if (username == null) {
+            return AppResult.failed(ResultCode.FAILED_USERNAME_INVALID, "用户名不能为空");
+        }
+        if (nickname == null) {
+            return AppResult.failed(ResultCode.FAILED_NICKNAME_INVALID, "昵称不能为空");
+        }
+        if (password == null) {
+            return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, "密码不能为空");
+        }
+        if (passwordRepeat == null) {
+            return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, "确认密码不能为空");
+        }
+
+        // 2. 检查是否为空字符串（去除空格后检查）
+        if (username.trim().isEmpty()) {
+            return AppResult.failed(ResultCode.FAILED_USERNAME_INVALID, "用户名不能为空");
+        }
+        if (nickname.trim().isEmpty()) {
+            return AppResult.failed(ResultCode.FAILED_NICKNAME_INVALID, "昵称不能为空");
+        }
+        if (password.trim().isEmpty()) {
+            return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, "密码不能为空");
+        }
+        if (passwordRepeat.trim().isEmpty()) {
+            return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, "确认密码不能为空");
+        }
+
+        // 3. 去除首尾空格
+        username = username.trim();
+        nickname = nickname.trim();
+
+        // 4. 校验用户名格式
+        String usernameError = ValidationUtil.validateUsername(username);
+        if (usernameError != null) {
+            return AppResult.failed(ResultCode.FAILED_USERNAME_INVALID, usernameError);
+        }
+
+        // 5. 校验昵称格式
+        String nicknameError = ValidationUtil.validateNickname(nickname);
+        if (nicknameError != null) {
+            return AppResult.failed(ResultCode.FAILED_NICKNAME_INVALID, nicknameError);
+        }
+
+        // 6. 校验密码格式和强度
+        String passwordError = ValidationUtil.validatePassword(password);
+        if (passwordError != null) {
+            // 区分是长度问题还是强度问题
+            if (passwordError.contains("长度")) {
+                return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, passwordError);
+            } else if (passwordError.contains("字母和数字")) {
+                return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, passwordError);
+            } else if (passwordError.contains("强度")) {
+                return AppResult.failed(ResultCode.FAILED_PASSWORD_TOO_WEAK, passwordError);
+            } else {
+                return AppResult.failed(ResultCode.FAILED_PASSWORD_INVALID, passwordError);
+            }
+        }
+
+        // 7. 校验两次密码是否一致
         if (!password.equals(passwordRepeat)) {
-            log.warn(ResultCode.FAILED_TWO_PWD_NOT_SAME.toString());
             return AppResult.failed(ResultCode.FAILED_TWO_PWD_NOT_SAME);
         }
-        // 准备数据
+
+        // 8. 准备数据
         User user = new User();
         user.setUsername(username);
         user.setNickname(nickname);
@@ -59,8 +119,17 @@ public class UserController {
         user.setPassword(encryptPassword);
         user.setSalt(salt);
 
-        // 调用Service层
-        userService.createNormalUser(user);
+        // 9. 调用 Service 层
+        try {
+            userService.createNormalUser(user);
+        } catch (ApplicationException e) {
+            // 如果是用户已存在的异常，返回对应的错误码
+            if (e.getMessage().contains("用户已存在")) {
+                return AppResult.failed(ResultCode.FAILED_USER_EXISTS);
+            }
+            // 其他异常向上抛出
+            throw e;
+        }
 
         return AppResult.success();
     }
@@ -68,8 +137,8 @@ public class UserController {
     @ApiOperation("用户登录")
     @PostMapping("/login")
     public AppResult login (HttpServletRequest request,
-                            @ApiParam("用户名") @RequestParam("username") @NonNull String username,
-                            @ApiParam("密码") @RequestParam("password") @NonNull String password) {
+                            @ApiParam("用户名") @RequestParam("username") String username,
+                            @ApiParam("密码") @RequestParam("password") String password) {
         // 1. 调用Service中的登录方法，返回User对象
         User user = userService.login(username, password);
         if (user == null) {
@@ -193,9 +262,9 @@ public class UserController {
     @ApiOperation("修改密码")
     @PostMapping("/modifyPwd")
     public AppResult modifyPassword (HttpServletRequest request,
-                                     @ApiParam("原密码") @RequestParam("oldPassword") @NonNull String oldPassword,
-                                     @ApiParam("新密码") @RequestParam("newPassword") @NonNull String newPassword,
-                                     @ApiParam("确认密码") @RequestParam("passwordRepeat") @NonNull String passwordRepeat) {
+                                     @ApiParam("原密码") @RequestParam("oldPassword") String oldPassword,
+                                     @ApiParam("新密码") @RequestParam("newPassword") String newPassword,
+                                     @ApiParam("确认密码") @RequestParam("passwordRepeat") String passwordRepeat) {
         // 校验新密码与确认密码是否相同
         if (!newPassword.equals(passwordRepeat)) {
             return AppResult.failed(ResultCode.FAILED_TWO_PWD_NOT_SAME);

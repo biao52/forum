@@ -112,28 +112,134 @@
 
 // 当前页加载成功后执行的方法
 $(function () {
+  // 用户名验证规则
+  function validateUsername(username) {
+    if (!username) {
+      return '用户名不能为空';
+    }
+    if (username.trim().length === 0) {
+      return '用户名不能为空字符串';
+    }
+    username = username.trim();
+    if (username.length < 4) {
+      return '用户名长度至少为 4 位';
+    }
+    if (username.length > 20) {
+      return '用户名长度不能超过 20 位';
+    }
+    // 检查是否以数字开头
+    if (/^[0-9]/.test(username)) {
+      return '用户名只能包含字母、数字、下划线，且不能以数字开头';
+    }
+    // 检查是否只包含字母、数字、下划线
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return '用户名只能包含字母、数字、下划线，且不能以数字开头';
+    }
+    return null;
+  }
+
+  // 昵称验证规则
+  function validateNickname(nickname) {
+    if (!nickname) {
+      return '昵称不能为空';
+    }
+    if (nickname.trim().length === 0) {
+      return '昵称不能为空字符串';
+    }
+    nickname = nickname.trim();
+    if (nickname.length < 2) {
+      return '昵称长度至少为 2 位';
+    }
+    if (nickname.length > 20) {
+      return '昵称长度不能超过 20 位';
+    }
+    // 检查是否只包含中文、字母、数字
+    if (!/^[\u4e00-\u9fa5a-zA-Z0-9]+$/.test(nickname)) {
+      return '昵称只能包含中文、字母、数字';
+    }
+    return null;
+  }
+
+  // 密码验证规则
+  function validatePassword(password) {
+    if (!password) {
+      return '密码不能为空';
+    }
+    if (password.trim().length === 0) {
+      return '密码不能为空字符串';
+    }
+    if (password.length < 6) {
+      return '密码长度至少为 6 位';
+    }
+    // 检查是否包含数字、大写字母、小写字母
+    var hasDigit = /[0-9]/.test(password);
+    var hasUpperCase = /[A-Z]/.test(password);
+    var hasLowerCase = /[a-z]/.test(password);
+    if (!(hasDigit && hasUpperCase && hasLowerCase)) {
+      return '密码必须包含数字、大写字母和小写字母';
+    }
+    return null;
+  }
+
   // 获取表单并校验
   $('#submit').click(function () {
     let checkForm = true;
+    let errorMsg = '';
+    
     // 校验用户名
-    if (!$('#username').val()) {
+    let username = $('#username').val();
+    let usernameError = validateUsername(username);
+    if (usernameError) {
       $('#username').addClass('is-invalid');
+      $('#username').removeClass('is-valid');
+      errorMsg = usernameError;
       checkForm = false;
+    } else {
+      $('#username').removeClass('is-invalid');
+      $('#username').addClass('is-valid');
     }
+    
     // 校验昵称
-    if (!$('#nickname').val()) {
+    let nickname = $('#nickname').val();
+    let nicknameError = validateNickname(nickname);
+    if (nicknameError) {
       $('#nickname').addClass('is-invalid');
+      $('#nickname').removeClass('is-valid');
+      if (!errorMsg) errorMsg = nicknameError;
       checkForm = false;
+    } else {
+      $('#nickname').removeClass('is-invalid');
+      $('#nickname').addClass('is-valid');
     }
-    // 校验密码非空
-    if (!$('#password').val()) {
+    
+    // 校验密码
+    let password = $('#password').val();
+    let passwordError = validatePassword(password);
+    if (passwordError) {
       $('#password').addClass('is-invalid');
+      $('#password').removeClass('is-valid');
+      if (!errorMsg) errorMsg = passwordError;
       checkForm = false;
+    } else {
+      $('#password').removeClass('is-invalid');
+      $('#password').addClass('is-valid');
     }
-    // 校验确认密码非空, 校验密码与重复密码是否相同
-    if (!$('#passwordRepeat').val() || $('#password').val() != $('#passwordRepeat').val()) {
+    
+    // 校验确认密码
+    let passwordRepeat = $('#passwordRepeat').val();
+    if (!passwordRepeat) {
       $('#passwordRepeat').addClass('is-invalid');
+      $('#passwordRepeat').removeClass('is-valid');
+      if (!errorMsg) errorMsg = '确认密码不能为空';
       checkForm = false;
+    } else if (password !== passwordRepeat) {
+      $('#passwordRepeat').addClass('is-invalid');
+      $('#passwordRepeat').removeClass('is-valid');
+      if (!errorMsg) errorMsg = '两次输入的密码不一致';
+      checkForm = false;
+    } else {
+      $('#passwordRepeat').removeClass('is-invalid');
+      $('#passwordRepeat').addClass('is-valid');
     }
 
     // 检验政策是否勾选
@@ -141,8 +247,16 @@ $(function () {
       $('#policy').addClass('is-invalid');
       checkForm = false;
     }
+    
     // 根据判断结果提交表单
     if (!checkForm) {
+      if (errorMsg) {
+        $.toast({
+          heading: '警告',
+          text: errorMsg,
+          icon: 'warning'
+        });
+      }
       return;
     }
     
@@ -188,16 +302,59 @@ $(function () {
     });
   });
 
-  // 表单元单独检验
-  $('#username, #nickname, #password').on('blur', function () {
-    if ($(this).val()) {
-      $(this).removeClass('is-invalid');
-      $(this).addClass('is-valid');
-    } else {
+  // 表单元单独检验 - 用户名
+  $('#username').on('blur', function () {
+    let username = $(this).val();
+    let error = validateUsername(username);
+    if (error) {
       $(this).removeClass('is-valid');
       $(this).addClass('is-invalid');
+      $.toast({
+        heading: '警告',
+        text: error,
+        icon: 'warning'
+      });
+    } else {
+      $(this).removeClass('is-invalid');
+      $(this).addClass('is-valid');
     }
-  })
+  });
+
+  // 表单元单独检验 - 昵称
+  $('#nickname').on('blur', function () {
+    let nickname = $(this).val();
+    let error = validateNickname(nickname);
+    if (error) {
+      $(this).removeClass('is-valid');
+      $(this).addClass('is-invalid');
+      $.toast({
+        heading: '警告',
+        text: error,
+        icon: 'warning'
+      });
+    } else {
+      $(this).removeClass('is-invalid');
+      $(this).addClass('is-valid');
+    }
+  });
+
+  // 表单元单独检验 - 密码
+  $('#password').on('blur', function () {
+    let password = $(this).val();
+    let error = validatePassword(password);
+    if (error) {
+      $(this).removeClass('is-valid');
+      $(this).addClass('is-invalid');
+      $.toast({
+        heading: '警告',
+        text: error,
+        icon: 'warning'
+      });
+    } else {
+      $(this).removeClass('is-invalid');
+      $(this).addClass('is-valid');
+    }
+  });
 
   // 检验确认密码
   $('#passwordRepeat').on('blur', function () {

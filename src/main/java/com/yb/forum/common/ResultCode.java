@@ -13,9 +13,13 @@ public enum ResultCode {
     FAILED_USER_EXISTS          (1101, "用户已存在"),
     FAILED_USER_NOT_EXISTS      (1102, "用户不存在"),
     FAILED_LOGIN                (1103, "用户名或密码错误"),
-    FAILED_USER_BANNED          (1104, "您已被禁言, 请联系管理员, 并重新登录."),
+    FAILED_USER_BANNED          (1104, "您已被禁言，请联系管理员，并重新登录."),
     FAILED_USER_ARTICLE_COUNT   (1105, "更新帖子数量失败"),
     FAILED_TWO_PWD_NOT_SAME     (1106, "两次输入的密码不一致"),
+    FAILED_USERNAME_INVALID     (1107, "用户名格式不正确"),
+    FAILED_NICKNAME_INVALID     (1108, "昵称格式不正确"),
+    FAILED_PASSWORD_INVALID     (1109, "密码格式不正确"),
+    FAILED_PASSWORD_TOO_WEAK    (1110, "密码强度不足"),
 
 
     // 关于版块的错误描述

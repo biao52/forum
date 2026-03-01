@@ -69,6 +69,10 @@ public class AppResult<T> {
         return new AppResult(resultCode.getCode(), resultCode.getMessage());
     }
 
+    public static AppResult failed (ResultCode resultCode, String message) {
+        return new AppResult(resultCode.getCode(), message);
+    }
+
 
     public int getCode() {
         return code;
