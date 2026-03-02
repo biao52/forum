@@ -3,12 +3,14 @@ package com.yb.forum.controller;
 import com.yb.forum.common.AppResult;
 import com.yb.forum.common.ResultCode;
 import com.yb.forum.config.AppConfig;
+import com.yb.forum.exception.ApplicationException;
 import com.yb.forum.model.Article;
 import com.yb.forum.model.Board;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IArticleService;
 import com.yb.forum.services.IBoardService;
 import com.yb.forum.utils.StringUtil;
+import com.yb.forum.utils.XssUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,35 +54,103 @@ public class ArticleController {
     @ApiOperation("发布新帖")
     @PostMapping("/create")
     public AppResult create (HttpServletRequest request,
-                             @ApiParam("版块Id") @RequestParam("boardId") @NonNull Long boardId,
-                             @ApiParam("文章标题") @RequestParam("title") @NonNull String title,
-                             @ApiParam("文章内容") @RequestParam("content") @NonNull String content) {
-        // 校验用户是否禁言
+                             @ApiParam("版块Id") @RequestParam("boardId") Long boardId,
+                             @ApiParam("文章标题") @RequestParam("title") String title,
+                             @ApiParam("文章内容") @RequestParam("content") String content) {
+        // 1. 检查必要参数
+        if (boardId == null) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "版块ID不能为空");
+        }
+        if (StringUtil.isEmpty(title)) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "标题不能为空");
+        }
+        if (StringUtil.isEmpty(content)) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "内容不能为空");
+        }
+        
+        // 2. 检查参数长度
+        if (title.trim().length() < 2) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "标题长度至少为2位");
+        }
+        if (title.trim().length() > 100) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "标题长度不能超过100位");
+        }
+        if (content.trim().length() < 10) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "内容长度至少为10位");
+        }
+        if (content.length() > 50000) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "内容长度不能超过50000位");
+        }
+        
+        // 3. 校验用户是否登录
         HttpSession session = request.getSession(false);
+        if (session == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
         User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 4. 校验用户是否禁言
         if (user.getState() == 1) {
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
-        // 版块的校验
+        
+        // 5. 版块的校验
         Board board = boardService.selectById(boardId.longValue());
-        if (board == null || board.getDeleteState() == 1 || board.getState() == 1) {
-            log.warn(ResultCode.FAILED_BOARD_BANNED.toString());
-            return AppResult.failed(ResultCode.FAILED_BOARD_BANNED);
+        if (board == null) {
+            return AppResult.failed(ResultCode.FAILED_BOARD_NOT_EXISTS, "版块不存在");
         }
-        // 封装文章对象
+        if (board.getDeleteState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_BOARD_BANNED, "版块已被删除");
+        }
+        if (board.getState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_BOARD_BANNED, "版块已被禁用");
+        }
+        
+        // 6. 检查发布频率（防刷屏）
+        String publishKey = "user:publish:" + user.getId();
+        String lastPublishTime = (String) redisTemplate.opsForValue().get(publishKey);
+        if (lastPublishTime != null) {
+            long lastTime = Long.parseLong(lastPublishTime);
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastTime < 60000) { // 60秒内只能发布一次
+                return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "发布频率过高，请稍后再试");
+            }
+        }
+        
+        // 7. 过滤和清理输入
+        String cleanTitle = XssUtil.clean(title.trim());
+        String cleanContent = XssUtil.clean(content.trim());
+        
+        // 8. 封装文章对象
         Article article = new Article();
-        article.setTitle(title);
-        article.setContent(content);
+        article.setTitle(cleanTitle);
+        article.setContent(cleanContent);
         article.setBoardId(boardId);
         article.setUserId(user.getId());
-        // 调用Service
-        articleService.create(article);
-
-        // 清除相关缓存
-        clearArticleListCache(boardId);
-        clearArticleListCache(null); // 清除所有文章列表缓存
-
-        return AppResult.success();
+        
+        try {
+            // 9. 调用Service
+            articleService.create(article);
+            
+            // 10. 设置发布频率限制
+            redisTemplate.opsForValue().set(publishKey, String.valueOf(System.currentTimeMillis()), 1, TimeUnit.MINUTES);
+            
+            // 11. 清除相关缓存
+            clearArticleListCache(boardId);
+            clearArticleListCache(null); // 清除所有文章列表缓存
+            
+            // 12. 返回文章ID
+            return AppResult.success(article.getId());
+        } catch (ApplicationException e) {
+            log.error("发布文章失败: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("发布文章异常: {}", e.getMessage(), e);
+            return AppResult.failed(ResultCode.ERROR_SERVICES, "发布文章失败，请稍后再试");
+        }
     }
 
     @ApiOperation("获取帖子列表")
