@@ -84,6 +84,16 @@
 
 <script>
   $(function () {
+    // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+      }
+    });
+
     // ========================== 获取帖子详情 ========================== 
     // 成功后，设置ID,版块名，标题，并初始编辑区同时设置正文initEditor(edit_article.content);
     $.ajax({

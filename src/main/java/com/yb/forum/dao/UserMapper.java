@@ -1,7 +1,6 @@
 package com.yb.forum.dao;
 
 import com.yb.forum.model.User;
-import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 //@Mapper
@@ -17,4 +16,6 @@ public interface UserMapper {
     int updateByPrimaryKey(User row);
 
     User selectByUserName (@Param("username") String username);
+    
+    User selectByNickname (@Param("nickname") String nickname);
 }

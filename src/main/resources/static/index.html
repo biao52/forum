@@ -178,18 +178,6 @@
         <div class="container-xl">
           <div class="row text-center align-items-center">
             <div class="col-lg-auto ms-lg-auto">
-<!--              <ul class="list-inline list-inline-dots mb-0">-->
-<!--                <li class="list-inline-item">-->
-<!--                  Copyright &copy; 2023-->
-<!--                  <a href="#" class="link-secondary">比特论坛</a>-->
-<!--                  版权所有-->
-<!--                </li>-->
-<!--                <li class="list-inline-item">-->
-<!--                  <a href="https://gitee.com/guangchen01/bit_forum" class="link-secondary">-->
-<!--                    GITEE-->
-<!--                  </a>-->
-<!--                </li>-->
-<!--              </ul>-->
             </div>
           </div>
         </div>
@@ -308,6 +296,28 @@
 <script src="./dist/libs/tinymce/tinymce.min.js" defer></script>
 <script>
   $(function () {
+    // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        // 从 localStorage 获取 token
+        const token = localStorage.getItem('token');
+        // console.log('=== AJAX 请求 ===');
+        // console.log('Token:', token ? '存在' : '不存在');
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+          // console.log('已添加 Authorization 头');
+        }
+      },
+      complete: function(xhr, status) {
+        // console.log('=== AJAX 响应 ===');
+        // console.log('状态码:', xhr.status);
+        // console.log('状态:', status);
+        if (xhr.status === 401) {
+          console.error('未授权，请先登录');
+        }
+      }
+    });
+
     // ========================= 顶部搜索框：提交事件 =======================
     function Index_Search_Form () {
       let keyword = $('#index_search_input').val().trim();
@@ -472,12 +482,14 @@
     });
 
     // ============================ 处理退出登录点击事件 ===========================
-    // 成功后，跳转到sign-in.html
+    // 成功后，跳转到 sign-in.html
     $('#index_user_logout').click(function () {
       $.ajax({
         type : 'get',
         url : 'user/logout',
         complete : function () {
+          // 清除 localStorage 中的 token
+          localStorage.removeItem('token');
           // 当前请求完成时，不论成功与失败都跳转到登录页面
           location.assign('/sign-in.html');
         }

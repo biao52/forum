@@ -8,6 +8,8 @@ import com.yb.forum.model.ArticleReply;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IArticleReplyService;
 import com.yb.forum.services.IArticleService;
+import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.JwtUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +35,8 @@ public class ArticleReplyController {
     @Resource
     private IArticleService articleService;
     @Resource
+    private IUserService userService;
+    @Resource
     private IArticleReplyService articleReplyService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
@@ -46,9 +49,29 @@ public class ArticleReplyController {
     public AppResult create (HttpServletRequest request,
                              @ApiParam("帖子Id") @RequestParam("articleId") @NonNull Long articleId,
                              @ApiParam("帖子内容") @RequestParam("content") @NonNull String content) {
-        // 获取用户
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
         // 判断用户是否已禁言
         if (user.getState() == 1) {
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);

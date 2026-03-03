@@ -33,6 +33,19 @@ public class ValidationUtil {
      * - 包含字母和数字
      */
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[0-9])(?=.*[a-zA-Z]).{6,}$");
+    
+    /**
+     * 邮箱正则：
+     * - 标准邮箱格式
+     */
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    
+    /**
+     * 手机号正则：
+     * - 11位数字
+     * - 以1开头
+     */
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
 
     /**
      * 最大长度限制
@@ -234,5 +247,31 @@ public class ValidationUtil {
         }
         
         return false;
+    }
+    
+    /**
+     * 校验邮箱格式
+     * 
+     * @param email 邮箱地址
+     * @return true 表示格式正确
+     */
+    public static boolean isValidEmail(String email) {
+        if (StringUtil.isEmpty(email)) {
+            return false;
+        }
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
+    
+    /**
+     * 校验手机号格式
+     * 
+     * @param phoneNum 手机号
+     * @return true 表示格式正确
+     */
+    public static boolean isValidPhoneNum(String phoneNum) {
+        if (StringUtil.isEmpty(phoneNum)) {
+            return false;
+        }
+        return PHONE_PATTERN.matcher(phoneNum).matches();
     }
 }

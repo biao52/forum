@@ -191,7 +191,17 @@
 </div>
 <script>
   $(function() {
-    // ================= 获取用户详情，初始化页面内容 =================
+    // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+      }
+    });
+
+    // ================= 获取用户详情，初始化页面内容 ===================
     // 发送AJAX请求，成功时 调用initUserInfo方法，完成页面数据初始化
     $.ajax({
       type : 'get',

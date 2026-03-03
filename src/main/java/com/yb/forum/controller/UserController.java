@@ -6,6 +6,7 @@ import com.yb.forum.config.AppConfig;
 import com.yb.forum.exception.ApplicationException;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.JwtUtil;
 import com.yb.forum.utils.MD5Util;
 import com.yb.forum.utils.StringUtil;
 import com.yb.forum.utils.UUIDUtil;
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -136,55 +138,76 @@ public class UserController {
 
     @ApiOperation("用户登录")
     @PostMapping("/login")
-    public AppResult login (HttpServletRequest request,
-                            @ApiParam("用户名") @RequestParam("username") String username,
+    public AppResult login (@ApiParam("用户名") @RequestParam("username") String username,
                             @ApiParam("密码") @RequestParam("password") String password) {
-        // 1. 调用Service中的登录方法，返回User对象
+        // 1. 调用 Service 中的登录方法，返回 User 对象
         User user = userService.login(username, password);
         if (user == null) {
             log.warn(ResultCode.FAILED_LOGIN.toString());
             return AppResult.failed(ResultCode.FAILED_LOGIN);
         }
-        // 2. 如果登录成功把User对象设置到Session作用域中
-        HttpSession session = request.getSession(true);
-        session.setAttribute(AppConfig.USER_SESSION, user);
-
-        // 3. 将用户信息存入Redis缓存
+        
+        // 2. 生成 JWT 令牌
+        String token = JwtUtil.generateToken(user);
+        
+        // 3. 将用户信息存入 Redis 缓存（用于快速查询）
         String cacheKey = USER_INFO_KEY + user.getId();
         redisTemplate.opsForValue().set(cacheKey, user, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
-
-        return AppResult.success();
+        
+        // 4. 返回令牌和用户信息
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("token", token);
+        responseData.put("user", user);
+        
+        return AppResult.success(responseData);
     }
 
     @ApiOperation("获取用户信息")
     @GetMapping("/info")
     public AppResult<User> getUserInfo (HttpServletRequest request,
-                                        @ApiParam("用户Id") @RequestParam(value = "id", required = false) Long id) {
+                                        @ApiParam("用户 Id") @RequestParam(value = "id", required = false) Long id) {
         User user = null;
 
         if (id == null) {
-            // 从session中获取当前登录的用户信息
-            HttpSession session = request.getSession(false);
-            user = (User) session.getAttribute(AppConfig.USER_SESSION);
-        } else {
-            // 尝试从Redis获取缓存
-            String cacheKey = USER_INFO_KEY + id;
-            user = (User) redisTemplate.opsForValue().get(cacheKey);
-
-            if (user != null) {
-                log.info("从Redis缓存获取用户信息，id: {}", id);
-                return AppResult.success(user);
+            // 从 JWT 令牌中获取用户 ID
+            String token = request.getHeader("Authorization");
+            log.info("获取用户信息 - Authorization 头: {}", token != null ? "存在" : "不存在");
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+                log.info("获取用户信息 - Token 值: {}", token.substring(0, Math.min(50, token.length())) + "...");
+                try {
+                    Long userId = JwtUtil.getUserIdFromToken(token);
+                    id = userId;
+                    log.info("获取用户信息 - 从 token 中解析出 userId: {}", userId);
+                } catch (Exception e) {
+                    log.error("获取用户信息 - JWT 解析失败", e);
+                }
             }
+        }
+        
+        // 如果仍然没有用户 ID，返回错误
+        if (id == null) {
+            log.warn("获取用户信息 - 没有 userId，返回未授权错误");
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED);
+        }
 
-            // 缓存未命中，从数据库查询
-            log.info("从数据库查询用户信息，id: {}", id);
-            user = userService.selectById(id);
+        // 尝试从 Redis 获取缓存
+        String cacheKey = USER_INFO_KEY + id;
+        user = (User) redisTemplate.opsForValue().get(cacheKey);
 
-            if (user != null) {
-                // 存入Redis缓存
-                String cacheKey1 = USER_INFO_KEY + id;
-                redisTemplate.opsForValue().set(cacheKey1, user, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
-            }
+        if (user != null) {
+            log.info("从 Redis 缓存获取用户信息，id: {}", id);
+            return AppResult.success(user);
+        }
+
+        // 缓存未命中，从数据库查询
+        log.info("从数据库查询用户信息，id: {}", id);
+        user = userService.selectById(id);
+
+        if (user != null) {
+            // 存入 Redis 缓存
+            String cacheKey1 = USER_INFO_KEY + id;
+            redisTemplate.opsForValue().set(cacheKey1, user, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
         }
 
         if (user == null) {
@@ -197,18 +220,26 @@ public class UserController {
     @ApiOperation("退出登录")
     @GetMapping("/logout")
     public AppResult logout (HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            User user = (User) session.getAttribute(AppConfig.USER_SESSION);
-            if (user != null) {
-                // 清除Redis中的用户缓存
-                String cacheKey = USER_INFO_KEY + user.getId();
-                redisTemplate.delete(cacheKey);
-                log.info("清除用户缓存: {}", cacheKey);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
             }
-            log.info("退出成功");
-            session.invalidate();
         }
+        
+        // 清除 Redis 中的用户缓存
+        if (userId != null) {
+            String cacheKey = USER_INFO_KEY + userId;
+            redisTemplate.delete(cacheKey);
+            log.info("清除用户缓存：{}", cacheKey);
+        }
+        
+        log.info("退出成功");
         return AppResult.success("退出成功");
     }
 
@@ -225,12 +256,63 @@ public class UserController {
         if (StringUtil.isEmpty(username) && StringUtil.isEmpty(nickname)
                 && StringUtil.isEmpty(email) && StringUtil.isEmpty(phoneNum)
                 && StringUtil.isEmpty(remark) && gender == null) {
-            return AppResult.failed("请输入要修改的内容");
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "请输入要修改的内容");
         }
 
-        // 从session中获取用户Id
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED);
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS);
+        }
+        
+        // 校验用户是否被禁言
+        if (user.getState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_USER_BANNED);
+        }
+
+        // 校验昵称格式
+        if (!StringUtil.isEmpty(nickname)) {
+            String nicknameError = ValidationUtil.validateNickname(nickname);
+            if (nicknameError != null) {
+                return AppResult.failed(ResultCode.FAILED_NICKNAME_INVALID, nicknameError);
+            }
+            // 校验昵称是否已存在
+            User checkUser = userService.selectByNickname(nickname);
+            if (checkUser != null && !checkUser.getId().equals(user.getId())) {
+                return AppResult.failed(ResultCode.FAILED_USER_EXISTS, "昵称已存在");
+            }
+        }
+        
+        // 校验邮箱格式
+        if (!StringUtil.isEmpty(email)) {
+            if (!ValidationUtil.isValidEmail(email)) {
+                return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "邮箱格式不正确");
+            }
+        }
+        
+        // 校验手机号格式
+        if (!StringUtil.isEmpty(phoneNum)) {
+            if (!ValidationUtil.isValidPhoneNum(phoneNum)) {
+                return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "手机号格式不正确");
+            }
+        }
 
         // 封装对象
         User updateUser = new User();
@@ -247,9 +329,6 @@ public class UserController {
 
         // 查询最新的用户信息
         user = userService.selectById(user.getId());
-
-        // 把最新的用户信息设置到session中
-        session.setAttribute(AppConfig.USER_SESSION, user);
 
         // 更新Redis缓存
         String cacheKey = USER_INFO_KEY + user.getId();
@@ -269,23 +348,32 @@ public class UserController {
         if (!newPassword.equals(passwordRepeat)) {
             return AppResult.failed(ResultCode.FAILED_TWO_PWD_NOT_SAME);
         }
-        // 获取当前登录的用户信息
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED);
+        }
 
         // 调用Service
-        userService.modifyPassword(user.getId(), newPassword, oldPassword);
+        userService.modifyPassword(userId, newPassword, oldPassword);
 
         // 清除Redis缓存
-        String cacheKey = USER_INFO_KEY + user.getId();
+        String cacheKey = USER_INFO_KEY + userId;
         redisTemplate.delete(cacheKey);
         log.info("清除用户缓存（修改密码）: {}", cacheKey);
 
-        // 销毁session
-        if (session != null) {
-            session.invalidate();
-        }
-
-        return AppResult.success();
+        return AppResult.success("修改成功");
     }
 }

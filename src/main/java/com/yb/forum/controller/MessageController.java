@@ -7,6 +7,7 @@ import com.yb.forum.model.Message;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IMessageService;
 import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.JwtUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 /**
@@ -38,9 +38,29 @@ public class MessageController {
     public AppResult send (HttpServletRequest request,
                            @ApiParam("接收者Id") @RequestParam("receiveUserId") @NonNull Long receiveUserId,
                            @ApiParam("内容") @RequestParam("content") @NonNull String content) {
-        // 获取当前登录的用户信息
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
         // 1. 当前登录用户的状态，如果是禁言状态不能发站内信
         if (user.getState() == 1) {
             // 返回用户状态异常
@@ -70,11 +90,25 @@ public class MessageController {
     @ApiOperation("获取未读数")
     @GetMapping("/getUnreadCount")
     public AppResult<Integer> getUnreadCount (HttpServletRequest request) {
-        // 1. 获取当前登录的用户
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
         // 2. 调用Service
-        Integer count = messageService.selectUnreadCount(user.getId());// 当前登录用户的Id就是接收者Id
+        Integer count = messageService.selectUnreadCount(userId);// 当前登录用户的Id就是接收者Id
         // 3. 返回结果
         return AppResult.success(count);
     }
@@ -87,11 +121,25 @@ public class MessageController {
     @ApiOperation("查询用户的所有站内信")
     @GetMapping("/getAll")
     public AppResult<List<Message>> getAll (HttpServletRequest request) {
-        // 1. 获取当前登录的用户
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
         // 2. 调用Service
-        List<Message> messages = messageService.selectByReceiveUserId(user.getId());
+        List<Message> messages = messageService.selectByReceiveUserId(userId);
         // 3. 返回结果
         return AppResult.success(messages);
     }
@@ -100,6 +148,23 @@ public class MessageController {
     @PostMapping("/markRead")
     public AppResult markRead (HttpServletRequest request,
                                @ApiParam("站内信Id") @RequestParam("id") @NonNull Long id) {
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
         // 1. 根据Id查询站内信
         Message message = messageService.selectById(id);
         // 2. 站内信是否存在
@@ -108,9 +173,7 @@ public class MessageController {
             return AppResult.failed(ResultCode.FAILED_MESSAGE_NOT_EXISTS);
         }
         // 3. 站内信是不是自己的
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
-        if (user.getId() != message.getReceiveUserId()) {
+        if (userId != message.getReceiveUserId()) {
             // 返回错误信息
             return AppResult.failed(ResultCode.FAILED_FORBIDDEN);
         }
@@ -132,9 +195,30 @@ public class MessageController {
     public AppResult reply (HttpServletRequest request,
                             @ApiParam("要回复的站内信Id") @RequestParam("repliedId") @NonNull Long repliedId,
                             @ApiParam("站内信的内容") @RequestParam("content") @NonNull String content) {
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
         // 校验当前登录用户的状态
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
         if (user.getState() == 1) {
             // 返回错误描述
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);

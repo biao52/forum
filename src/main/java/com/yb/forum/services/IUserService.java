@@ -1,6 +1,4 @@
 package com.yb.forum.services;
-
-
 import com.yb.forum.model.User;
 
 /**
@@ -21,6 +19,13 @@ public interface IUserService {
      * @return 用户信息
      */
     User selectByUserName (String username);
+    
+    /**
+     * 根据昵称查询用户信息
+     * @param nickname 昵称
+     * @return 用户信息
+     */
+    User selectByNickname (String nickname);
 
     /**
      * 处理用户登录

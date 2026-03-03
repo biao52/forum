@@ -84,6 +84,16 @@
 </div>
 <script>
   $(function () {
+    // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+      }
+    });
+
     // ===== 分页相关变量 =====
     let currentPage = 1;
     let pageSize = 10;    // 每页显示条数，可由下拉框修改

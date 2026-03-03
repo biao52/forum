@@ -24,10 +24,18 @@ public class AppInterceptorConfigurer implements WebMvcConfigurer {
                 .addPathPatterns("/**")                 // 拦截所有请求
                 .excludePathPatterns("/sign-in.html")   // 排除登录HTML
                 .excludePathPatterns("/sign-up.html")   // 排除注册HTML
+                .excludePathPatterns("/index.html")     // 排除首页HTML
+                .excludePathPatterns("/article.html")    // 排除发帖HTML
+                .excludePathPatterns("/article_edit.html") // 排除编辑帖子HTML
+                .excludePathPatterns("/article_list.html") // 排除帖子列表HTML
+                .excludePathPatterns("/settings.html")  // 排除设置HTML
+                .excludePathPatterns("/profile.html")   // 排除个人中心HTML
                 .excludePathPatterns("/user/login")     // 排除登录api接口
                 .excludePathPatterns("/user/register")  // 排除注册api接口
                 .excludePathPatterns("/user/logout")    // 排除退出api接口
-                .excludePathPatterns("/article/**")    // 排除文章相关api接口
+                .excludePathPatterns("/user/info")     // 排除获取用户信息api接口
+                .excludePathPatterns("/user/modifyInfo")// 排除修改个人信息api接口
+                .excludePathPatterns("/article/**")     // 排除文章相关api接口
                 .excludePathPatterns("/board/**")       // 排除版块相关api接口
                 .excludePathPatterns("/reply/**")       // 排除回复相关api接口
                 .excludePathPatterns("/message/**")     // 排除站内信相关api接口

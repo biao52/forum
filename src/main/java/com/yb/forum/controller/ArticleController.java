@@ -9,6 +9,8 @@ import com.yb.forum.model.Board;
 import com.yb.forum.model.User;
 import com.yb.forum.services.IArticleService;
 import com.yb.forum.services.IBoardService;
+import com.yb.forum.services.IUserService;
+import com.yb.forum.utils.JwtUtil;
 import com.yb.forum.utils.StringUtil;
 import com.yb.forum.utils.XssUtil;
 import io.swagger.annotations.Api;
@@ -20,8 +22,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+      import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,8 @@ public class ArticleController {
     private IArticleService articleService;
     @Resource
     private IBoardService boardService;
+    @Resource
+    private IUserService userService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -82,14 +85,27 @@ public class ArticleController {
             return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "内容长度不能超过50000位");
         }
         
-        // 3. 校验用户是否登录
-        HttpSession session = request.getSession(false);
-        if (session == null) {
+        // 3. 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
             return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
         }
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
         if (user == null) {
-            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
         }
         
         // 4. 校验用户是否禁言
@@ -224,13 +240,22 @@ public class ArticleController {
         // 🔍 尝试从Redis获取缓存
         Article article = (Article) redisTemplate.opsForValue().get(cacheKey);
 
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+
         if (article != null) {
             log.info("✅ 从 Redis 缓存获取文章详情，id: {}", id);
-            // 从session中获取当前登录的用户
-            HttpSession session = request.getSession(false);
-            User user = (User) session.getAttribute(AppConfig.USER_SESSION);
             // 判断当前用户是否为作者
-            if (user != null && user.getId() == article.getUserId()) {
+            if (userId != null && userId == article.getUserId()) {
                 article.setOwn(true);
             }
             return AppResult.success(article);
@@ -238,8 +263,6 @@ public class ArticleController {
 
         // 🗄️ 缓存未命中，从数据库查询
         log.info("🔎 从数据库查询文章详情，id: {}", id);
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
 
         // 调用 Service，获取帖子详情（包含 user 和 board 关联信息）
         article = articleService.selectDetailById(id);
@@ -247,7 +270,7 @@ public class ArticleController {
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
         }
         // 判断当前用户是否为作者
-        if (user.getId() == article.getUserId()) {
+        if (userId != null && userId == article.getUserId()) {
             article.setOwn(true);
         }
 
@@ -284,9 +307,28 @@ public class ArticleController {
                              @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id,
                              @ApiParam("帖子标题") @RequestParam("title") @NonNull String title,
                              @ApiParam("帖子正文") @RequestParam("content") @NonNull String content) {
-        // 获取当前登录的用户
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
         // 校验用户状态
         if (user.getState() == 1) {
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
@@ -322,9 +364,29 @@ public class ArticleController {
     @PostMapping("/thumbsUp")
     public AppResult thumbsUp (HttpServletRequest request,
                                @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
-        // 校验用户的状态
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
         // 判断用户是否被禁言
         if (user.getState() == 1) {
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
@@ -342,9 +404,29 @@ public class ArticleController {
     @PostMapping("/delete")
     public AppResult deleteById (HttpServletRequest request,
                                  @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
-        // 校验用户状态
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute(AppConfig.USER_SESSION);
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
         if (user.getState() == 1) {
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
@@ -374,11 +456,22 @@ public class ArticleController {
     @GetMapping("/getAllByUserId")
     public AppResult<List<Article>> getAllByUserId (HttpServletRequest request,
                                                     @ApiParam("用户Id") @RequestParam(value = "userId", required = false) Long userId) {
-        // 如果UserId为空，那么从session中获取当前登录的用户Id
+        // 如果 UserId 为空，那么从 JWT 令牌中获取当前登录的用户 Id
         if (userId == null) {
-            HttpSession session = request.getSession(false);
-            User user = (User) session.getAttribute(AppConfig.USER_SESSION);
-            userId = user.getId();
+            String token = request.getHeader("Authorization");
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+                try {
+                    userId = JwtUtil.getUserIdFromToken(token);
+                } catch (Exception e) {
+                    // JWT 解析失败
+                }
+            }
+            
+            // 如果没有用户 ID，返回错误
+            if (userId == null) {
+                return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+            }
         }
 
         // 构造缓存key

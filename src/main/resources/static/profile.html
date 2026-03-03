@@ -95,7 +95,17 @@
 
 <script>
   $(function () {
-    // 构造查询用户信息的queryString
+    // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+      }
+    });
+
+    // 构造查询用户信息的 queryString
     let userInfoQueryString = '';
     if (profileUserId) {
       userInfoQueryString = '?id=' + profileUserId

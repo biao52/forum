@@ -82,6 +82,19 @@ public class UserServiceImpl implements IUserService {
         // 返回查询的结果
         return userMapper.selectByUserName(username);
     }
+    
+    @Override
+    public User selectByNickname(String nickname) {
+        // 非空校验
+        if (StringUtil.isEmpty(nickname)) {
+            // 打印日志
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        // 返回查询的结果
+        return userMapper.selectByNickname(nickname);
+    }
 
     @Override
     public User login(String username, String password) {
