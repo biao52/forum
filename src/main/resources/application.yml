@@ -28,12 +28,8 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss # 日期格式
     default-property-inclusion: NON_NULL # 不为null时序列化
-
-
 server:
   port: 58080 # 自定义的服务端口号
-
-
 logging:
   pattern:
     dateformat: yyyy-MM-dd HH:mm:ss #  日期的显示格式
