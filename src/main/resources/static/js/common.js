@@ -4,6 +4,31 @@ let currentArticle; // 当前访问的帖子
 let currentUserId;  // 当前登录用户
 let profileUserId;  // 查看个人信息
 
+// =================== 登录状态检查函数 ======================
+/**
+ * 检查用户登录状态，如果未登录则跳转到登录页
+ * @param {string} redirectUrl - 可选，跳转后的重定向地址（默认为 sign-in.html）
+ */
+function checkLoginStatus(redirectUrl) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.log('未检测到登录 token，跳转到登录页');
+        window.location.href = redirectUrl || 'sign-in.html';
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 处理登录失败，清除 token 并跳转
+ * @param {string} redirectUrl - 可选，跳转后的重定向地址
+ */
+function handleLoginFailure(redirectUrl) {
+    console.log('登录已失效，跳转到登录页');
+    localStorage.removeItem('token');
+    window.location.href = redirectUrl || 'sign-in.html';
+}
+
 
 // ============================ 处理导航激活效果 ===========================
 function changeNavActive (boardItem) {

@@ -23,7 +23,11 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver # 数据库连接驱动
   mvc:
     pathmatch:
-      matching-strategy: ANT_PATH_MATCHER #Springfox-Swagger兼容性配置
+      matching-strategy: ANT_PATH_MATCHER #Springfox-Swagger 兼容性配置
+  # 错误页面配置
+  web:
+    resources:
+      static-locations: classpath:/static/
   # JSON序列化配置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss # 日期格式

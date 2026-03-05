@@ -19,28 +19,17 @@ public class AppInterceptorConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 添加登录拦截器
+        // 添加登录拦截器 - 只拦截 API 接口，不拦截静态 HTML 页面
         registry.addInterceptor(loginInterceptor)       // 添加用户登录拦截器
-                .addPathPatterns("/**")                 // 拦截所有请求
-                .excludePathPatterns("/sign-in.html")   // 排除登录HTML
-                .excludePathPatterns("/sign-up.html")   // 排除注册HTML
-                .excludePathPatterns("/index.html")     // 排除首页HTML
-                .excludePathPatterns("/article.html")    // 排除发帖HTML
-                .excludePathPatterns("/article_edit.html") // 排除编辑帖子HTML
-                .excludePathPatterns("/article_list.html") // 排除帖子列表HTML
-                .excludePathPatterns("/settings.html")  // 排除设置HTML
-                .excludePathPatterns("/profile.html")   // 排除个人中心HTML
-                .excludePathPatterns("/user/login")     // 排除登录api接口
-                .excludePathPatterns("/user/register")  // 排除注册api接口
-                .excludePathPatterns("/user/logout")    // 排除退出api接口
-                .excludePathPatterns("/user/info")     // 排除获取用户信息api接口
-                .excludePathPatterns("/user/modifyInfo")// 排除修改个人信息api接口
-                .excludePathPatterns("/article/**")     // 排除文章相关api接口
-                .excludePathPatterns("/board/**")       // 排除版块相关api接口
-                .excludePathPatterns("/reply/**")       // 排除回复相关api接口
-                .excludePathPatterns("/message/**")     // 排除站内信相关api接口
-                .excludePathPatterns("/swagger*/**")    // 排除登录swagger下所有
-                .excludePathPatterns("/v3*/**")         // 排除登录v3下所有，与swagger相关
+                .addPathPatterns("/user/**")            // 拦截用户相关 API
+                .addPathPatterns("/article/**")         // 拦截文章相关 API
+                .addPathPatterns("/board/**")           // 拦截版块相关 API
+                .addPathPatterns("/reply/**")           // 拦截回复相关 API
+                .addPathPatterns("/message/**")         // 拦截站内信相关 API
+                .excludePathPatterns("/user/login")     // 排除登录 api 接口
+                .excludePathPatterns("/user/register")  // 排除注册 api 接口
+                .excludePathPatterns("/swagger*/**")    // 排除 swagger 下所有
+                .excludePathPatterns("/v3*/**")         // 排除 v3 下所有，与 swagger 相关
                 .excludePathPatterns("/dist/**")        // 排除所有静态文件
                 .excludePathPatterns("/image/**")
                 .excludePathPatterns("/js/**")
