@@ -1,0 +1,107 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <link rel="shortcut icon" href="/favicon.png">
+    <title>论坛系统 - 页面未找到</title>
+    <!-- 导入 CSS -->
+    <link href="./dist/css/tabler.min.css?1674944402" rel="stylesheet"/>
+    <link rel="stylesheet" href="./dist/css/jquery.toast.css">
+  </head>
+  <body class="d-flex flex-column">
+    <!-- 正文 -->
+    <div class="page page-center">
+      <div class="container container-normal py-4">
+        <div class="row align-items-center g-4">
+          <div class="col-lg">
+            <div class="container-tight">
+              <div class="text-center mb-4">
+                <img src="./image/my-logo.png" height="50" alt="">
+              </div>
+              
+              <div class="card card-md">
+                <div class="card-body">
+                  <div class="text-center">
+                    <!-- 404 大号数字 -->
+                    <h1 class="display-1 text-red fw-bold" style="font-size: 6rem; line-height: 1;">404</h1>
+                    <h2 class="page-title mt-3">页面未找到</h2>
+                    <p class="text-muted my-3">
+                      抱歉，您访问的页面不存在或已被移除。<br>
+                      可能是输入了错误的地址，或者该页面已被删除。
+                    </p>
+                    
+                    <!-- 插图 -->
+                    <div class="my-4">
+                      <img src="./dist/illustrations/undraw_bug_fixing_oc7a.svg" height="200" alt="404 Illustration" class="img-fluid">
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="mt-4">
+                      <div class="btn-list justify-content-center">
+                        <a href="./index.html" class="btn btn-primary">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                            <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                            <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                          </svg>
+                          返回首页
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-secondary">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrow-back-up" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M9 14l-4 -4l4 -4" />
+                            <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+                          </svg>
+                          返回上一页
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="text-center text-muted mt-3">
+                如果您认为这是系统错误，请联系管理员。
+              </div>
+            </div>
+          </div>
+          <div class="col-lg d-none d-lg-block">
+            <img src="./dist/illustrations/undraw_secure_login_pdn4.svg" height="300" class="d-block mx-auto" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导入 JS -->
+    <script src="./dist/js/jquery-3.6.3.min.js"></script>
+    <script src="./dist/js/tabler.min.js"></script>
+    <script src="./dist/js/jquery.toast.js"></script>
+    <script>
+      $(function () {
+        // 可选：显示当前尝试访问的 URL（从 URL 参数或 referrer 获取）
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedPath = urlParams.get('path');
+        
+        if (requestedPath) {
+          console.log('尝试访问的路径:', requestedPath);
+          // 可以在页面上显示用户尝试访问的路径
+          // $('#requestedPath').text(requestedPath);
+        }
+        
+        // 监听返回键
+        $(document).keydown(function(e) {
+          if (e.keyCode === 8) {
+            // 如果当前焦点不在输入框，按退格键返回上一页
+            if ($(e.target).is('input, textarea') === false) {
+              history.back();
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
