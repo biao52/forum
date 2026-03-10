@@ -17,7 +17,7 @@ spring:
     ansi:
       enabled: ALWAYS # 配置输出的效果
   datasource:
-    url: jdbc:mysql://localhost:3306/forum_db_001?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true # 数据库连接串
+    url: jdbc:mysql://localhost:3306/forum_db_001?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver # 数据库连接驱动
@@ -28,10 +28,10 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/
-  # JSON序列化配置
+  # JSON 序列化配置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss # 日期格式
-    default-property-inclusion: NON_NULL # 不为null时序列化
+    default-property-inclusion: NON_NULL # 不为 null 时序列化
 server:
   port: 58080 # 自定义的服务端口号
 logging:
@@ -46,7 +46,7 @@ logging:
 
 # mybatis 相关配置，单独配置，顶格写
 mybatis:
-  mapper-locations: classpath:mapper/**/*.xml # 指定 xxxMapper.xml的扫描路径
+  mapper-locations: classpath:mapper/**/*.xml # 指定 xxxMapper.xml 的扫描路径
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 # 项目自定义相关配置
@@ -55,3 +55,22 @@ bit-forum:
     url: sign-in.html  # 未登录状况下强制跳转页面
   index: # 首页配置节点
     board-num: 9  # 首页中显示的版块个数
+
+# Dify 智能体配置
+dify:
+  api-key: app-6mz0qer5TitWE3ubYAZlCrvN  # Dify API 密钥
+  base-url: http://localhost  # Dify API 基础 URL
+  app-id: iNbAp4U4LEZ7Zh5q  # 智能体应用 ID
+  timeout: 30000  # 超时时间（毫秒）
+  system-prompt: |  # 系统提示词（使用 YAML 多行字符串）
+    你是论坛智能助手，专门为论坛用户提供帮助。你的职责包括：
+    1. 回答用户关于论坛使用的问题
+    2. 提供技术支持和指导
+    3. 解答用户的疑问
+    4. 保持友好、专业、耐心的态度
+    5. 回答简洁清晰，避免冗长
+    6. 如果遇到无法回答的问题，礼貌地告知用户
+    请注意：
+    - 使用中文回答
+    - 语气亲切自然
+    - 提供准确、有用的信息
