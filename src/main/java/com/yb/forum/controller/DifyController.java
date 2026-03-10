@@ -3,7 +3,7 @@ package com.yb.forum.controller;
 import com.yb.forum.common.AppResult;
 import com.yb.forum.common.ResultCode;
 import com.yb.forum.model.DifyResponse;
-import com.yb.forum.services.DifyService;
+import com.yb.forum.services.IDifyService;
 import com.yb.forum.utils.JwtUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 public class DifyController {
 
     @Resource
-    private DifyService difyService;
+    private IDifyService iDifyService;
     
     /**
      * 调用智能助手
@@ -48,7 +48,7 @@ public class DifyController {
             Long userId = JwtUtil.getUserIdFromToken(token);
             
             // 调用Dify服务
-            DifyResponse response = difyService.callDify(query, userId.toString());
+            DifyResponse response = iDifyService.callDify(query, userId.toString());
             
             // 返回结果
             return AppResult.success(ResultCode.SUCCESS.getMessage(), response.getAnswer());
