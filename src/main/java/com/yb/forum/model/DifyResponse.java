@@ -21,9 +21,14 @@ public class DifyResponse {
     private String message;
     
     /**
-     * 会话ID，用于上下文管理
+     * 会话 ID，用于上下文管理
      */
     private String conversation_id;
+    
+    /**
+     * 消息 ID
+     */
+    private String message_id;
     
     /**
      * 响应状态码
@@ -39,4 +44,13 @@ public class DifyResponse {
      * 参考资料（如果有）
      */
     private List<Map<String, Object>> references;
+    
+    // 为了方便使用，提供别名方法
+    public String getConversationId() {
+        return conversation_id;
+    }
+    
+    public String getMessageId() {
+        return message_id;
+    }
 }

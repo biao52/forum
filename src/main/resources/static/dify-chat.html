@@ -34,6 +34,41 @@
         transform: scale(1);
       }
     }
+    
+    /* 会话列表样式 */
+    #session-list .list-group-item {
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    #session-list .list-group-item:hover {
+      background-color: #f8f9fa;
+      border-left-color: #206bc4;
+    }
+    #session-list .list-group-item.active {
+      background-color: #e7f1ff;
+      border-left-color: #206bc4;
+    }
+    #session-list .session-title {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    #session-list .session-preview {
+      font-size: 12px;
+      color: #6c757d;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #session-list .session-meta {
+      font-size: 11px;
+      color: #adb5bd;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -48,8 +83,12 @@
         </button>
         <!-- 导航左侧 logo 按钮 -->
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-          <a href="index.html">
-            <img src="./image/my-logo.png" width="32" height="32" alt="Tabler" class="navbar-brand-image me-3">
+          <a href="javascript:void(0);" id="back-btn" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M9 11l-4 4l4 4m-4 -4h16a3 3 0 0 0 3 -3v-2a3 3 0 0 0 -3 -3h-5" />
+            </svg>
+            <span>返回</span>
           </a>
         </h1>
         <div class="collapse navbar-collapse" id="navbar-menu">
@@ -80,15 +119,38 @@
       <div class="container-xl">
         <div class="page-body">
           <!-- 智能助手聊天界面 -->
-          <div class="row justify-content-center">
-            <div class="col-md-8">
-              <div class="card">
+          <div class="row" style="height: calc(100vh - 200px);">
+            <!-- 左侧会话列表 -->
+            <div class="col-md-3 col-lg-2">
+              <div class="card" style="height: 100%;">
+                <div class="card-header">
+                  <h3 class="card-title">会话列表</h3>
+                  <button id="new-session-btn" class="btn btn-sm btn-primary ms-auto" title="新建会话">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <path d="M12 5v14" />
+                      <path d="M5 12h14" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="card-body p-0" style="overflow-y: auto;">
+                  <div id="session-list" class="list-group list-group-flush">
+                    <!-- 会话列表将通过 JS 动态加载 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 右侧聊天窗口 -->
+            <div class="col-md-9 col-lg-10">
+              <div class="card" style="height: 100%;">
                 <div class="card-header">
                   <h3 class="card-title">智能助手</h3>
+                  <span id="current-session-info" class="badge bg-muted ms-2"></span>
                 </div>
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                   <!-- 聊天记录 -->
-                  <div id="chat-history" class="mb-4" style="max-height: 400px; overflow-y: auto;">
+                  <div id="chat-history" class="mb-4 flex-grow-1" style="overflow-y: auto; max-height: none;">
                     <!-- 系统欢迎消息 -->
                     <div class="mb-3 p-3 bg-light rounded">
                       <div class="font-weight-bold text-muted">智能助手:</div>
@@ -117,6 +179,24 @@
   <script src="./dist/js/jquery.toast.js"></script>
   <script>
     $(function () {
+      // ==================== 返回按钮功能 ====================
+      $('#back-btn').click(function() {
+        // 尝试从 localStorage 获取上次访问的页面
+        const lastPage = localStorage.getItem('lastPage');
+        if (lastPage) {
+          window.location.href = lastPage;
+        } else {
+          // 默认返回首页
+          window.location.href = 'index.html';
+        }
+      });
+      
+      // ==================== 记录当前页面 ====================
+      // 在离开当前页面时，记录当前页面为上次访问的页面
+      $(window).on('beforeunload', function() {
+        localStorage.setItem('lastPage', window.location.href);
+      });
+      
       // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
       $.ajaxSetup({
         beforeSend: function(xhr) {
@@ -132,6 +212,236 @@
             window.location.href = 'sign-in.html';
           }
         }
+      });
+
+      // ==================== 加载对话历史 ====================
+      // 页面加载时从服务器加载历史对话记录
+      function loadConversationHistory() {
+        $.ajax({
+          type: 'get',
+          url: 'dify/history',
+          success: function(respData) {
+            if (respData.code === 0 && respData.data) {
+              const history = respData.data;
+              const chatHistory = $('#chat-history');
+              
+              if (history.length === 0) {
+                // 没有历史记录，显示欢迎消息
+                chatHistory.html(`
+                  <div class="mb-3 p-3 bg-light rounded">
+                    <div class="font-weight-bold text-muted">智能助手:</div>
+                    <div>你好！我是论坛智能助手，有什么可以帮助你的吗？</div>
+                  </div>
+                `);
+              } else {
+                // 有历史记录，清空欢迎消息
+                chatHistory.empty();
+                
+                // 显示最近的 20 条记录
+                const recentHistory = history.slice(0, 20);
+                recentHistory.forEach(function(item) {
+                  // 显示用户问题
+                  chatHistory.append(`
+                    <div class="mb-3 p-3 bg-primary text-white rounded text-right">
+                      <div class="font-weight-bold">你:</div>
+                      <div>${escapeHtml(item.query)}</div>
+                    </div>
+                  `);
+                  
+                  // 显示 AI 回答
+                  chatHistory.append(`
+                    <div class="mb-3 p-3 bg-light rounded">
+                      <div class="font-weight-bold text-muted">智能助手:</div>
+                      <div>${escapeHtml(item.answer)}</div>
+                    </div>
+                  `);
+                });
+                
+                // 滚动到底部
+                chatHistory.scrollTop(chatHistory[0].scrollHeight);
+              }
+            }
+          },
+          error: function(xhr, status, error) {
+            console.log('加载对话历史失败：', error);
+            // 加载失败不影响使用，显示默认欢迎消息
+          }
+        });
+      }
+      
+      // HTML 转义函数，防止 XSS 攻击
+      function escapeHtml(text) {
+        if (!text) return '';
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+      
+      // 格式化日期
+      function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = now - date;
+        
+        // 1 分钟内
+        if (diff < 60000) {
+          return '刚刚';
+        }
+        // 1 小时内
+        if (diff < 3600000) {
+          return Math.floor(diff / 60000) + '分钟前';
+        }
+        // 24 小时内
+        if (diff < 86400000) {
+          return Math.floor(diff / 3600000) + '小时前';
+        }
+        // 7 天内
+        if (diff < 604800000) {
+          return Math.floor(diff / 86400000) + '天前';
+        }
+        
+        // 其他显示日期
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        return month + '/' + day;
+      }
+      
+      // 根据 conversationId 加载对话
+      function loadConversationById(conversationId) {
+        $.ajax({
+          type: 'get',
+          url: 'dify/history',
+          data: {
+            conversationId: conversationId
+          },
+          success: function(respData) {
+            if (respData.code === 0 && respData.data) {
+              const history = respData.data;
+              const chatHistory = $('#chat-history');
+              chatHistory.empty();
+              
+              if (history.length === 0) {
+                chatHistory.html(`
+                  <div class="mb-3 p-3 bg-light rounded">
+                    <div class="font-weight-bold text-muted">智能助手:</div>
+                    <div>你好！我是论坛智能助手，有什么可以帮助你的吗？</div>
+                  </div>
+                `);
+              } else {
+                history.forEach(function(item) {
+                  chatHistory.append(`
+                    <div class="mb-3 p-3 bg-primary text-white rounded text-right">
+                      <div class="font-weight-bold">你:</div>
+                      <div>${escapeHtml(item.query)}</div>
+                    </div>
+                  `);
+                  chatHistory.append(`
+                    <div class="mb-3 p-3 bg-light rounded">
+                      <div class="font-weight-bold text-muted">智能助手:</div>
+                      <div>${escapeHtml(item.answer)}</div>
+                    </div>
+                  `);
+                });
+                chatHistory.scrollTop(chatHistory[0].scrollHeight);
+              }
+              $('#current-session-info').text(history.length + '条消息');
+            }
+          },
+          error: function(xhr, status, error) {
+            console.log('加载会话详情失败：', error);
+            $.toast({
+              heading: '错误',
+              text: '加载会话失败',
+              icon: 'error'
+            });
+          }
+        });
+      }
+      
+      // 加载会话列表
+      function loadSessionList() {
+        $.ajax({
+          type: 'get',
+          url: 'dify/sessions',
+          success: function(respData) {
+            if (respData.code === 0 && respData.data) {
+              const sessions = respData.data;
+              const sessionList = $('#session-list');
+              sessionList.empty();
+              
+              if (sessions.length === 0) {
+                sessionList.html(`
+                  <div class="text-center text-muted p-3">
+                    <small>暂无会话</small>
+                  </div>
+                `);
+              } else {
+                sessions.forEach(function(session, index) {
+                  const sessionItem = $(`
+                    <a href="javascript:void(0);" class="list-group-item list-group-item-action" data-conversation-id="${session.conversationId}">
+                      <div class="session-title">${escapeHtml(session.sessionName || '新会话')}</div>
+                      <div class="session-preview">${escapeHtml(session.lastAnswer || '')}</div>
+                      <div class="session-meta">
+                        <span>${session.messageCount}条消息</span>
+                        <span class="float-end">${formatDate(session.updateTime)}</span>
+                      </div>
+                    </a>
+                  `);
+                  
+                  sessionItem.click(function() {
+                    loadConversationById(session.conversationId);
+                    $('#session-list .list-group-item').removeClass('active');
+                    $(this).addClass('active');
+                  });
+                  
+                  sessionList.append(sessionItem);
+                  if (index === 0) {
+                    sessionItem.addClass('active');
+                  }
+                });
+              }
+            }
+          },
+          error: function(xhr, status, error) {
+            console.log('加载会话列表失败：', error);
+          }
+        });
+      }
+      
+      // 页面加载时加载会话列表和对话历史
+      loadSessionList();
+      loadConversationHistory();
+
+      // ==================== 新建会话 ====================
+      $('#new-session-btn').click(function() {
+        // 清空聊天历史
+        const chatHistory = $('#chat-history');
+        chatHistory.html(`
+          <div class="mb-3 p-3 bg-light rounded">
+            <div class="font-weight-bold text-muted">智能助手:</div>
+            <div>你好！我是论坛智能助手，有什么可以帮助你的吗？</div>
+          </div>
+        `);
+        
+        // 清除当前会话信息
+        $('#current-session-info').text('');
+        
+        // 移除所有选中状态
+        $('#session-list .list-group-item').removeClass('active');
+        
+        // 重新加载会话列表（确保显示最新的会话）
+        loadSessionList();
+        
+        // 提示用户
+        $.toast({
+          heading: '提示',
+          text: '已新建会话，请输入您的问题',
+          icon: 'info'
+        });
       });
 
       // ==================== 发送消息 ====================
@@ -157,7 +467,7 @@
         chatHistory.append(`
           <div class="mb-3 p-3 bg-primary text-white rounded text-right">
             <div class="font-weight-bold">你:</div>
-            <div>${userInput}</div>
+            <div>${escapeHtml(userInput)}</div>
           </div>
         `);
 
@@ -179,7 +489,7 @@
         `);
         chatHistory.scrollTop(chatHistory[0].scrollHeight);
 
-        // 调用 Dify API
+        // 调用 Dify API（后端会自动保存到数据库）
         console.log('发送请求到：dify/chat');
         console.log('请求数据：', { query: userInput });
         $.ajax({
@@ -198,11 +508,14 @@
               chatHistory.append(`
                 <div class="mb-3 p-3 bg-light rounded">
                   <div class="font-weight-bold text-muted">智能助手:</div>
-                  <div>${respData.data}</div>
+                  <div>${escapeHtml(respData.data)}</div>
                 </div>
               `);
               // 滚动到底部
               chatHistory.scrollTop(chatHistory[0].scrollHeight);
+              
+              // 刷新会话列表（确保显示最新的会话）
+              loadSessionList();
             } else {
               $.toast({
                 heading: '错误',

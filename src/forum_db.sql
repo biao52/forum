@@ -81,10 +81,25 @@ create table t_message (
     postUserId bigint not null comment '发送者，关联用户编号',
     receiveUserId bigint not null comment '接收者，关联用户编号',
     content varchar(255) not null comment '内容',
-    state tinyint not null default 0 comment '状态 0正常，1禁用',
-    deleteState tinyint not null default 0 comment '是否删除，0否，1是',
+    state tinyint not null default 0 comment '状态 0 正常，1 禁用',
+    deleteState tinyint not null default 0 comment '是否删除，0 否，1 是',
     createTime datetime not null comment '创建时间，精确到秒',
     updateTime datetime not null comment '更新时间，精确到秒'
+);
+
+# Dify 对话记录表
+DROP TABLE IF EXISTS t_dify_conversation;
+CREATE TABLE t_dify_conversation (
+	id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '编号，主键自增',
+    userId BIGINT NOT NULL COMMENT '用户编号，关联用户表',
+    conversationId VARCHAR(100) COMMENT 'Dify 对话 ID，用于关联同一会话',
+    query TEXT NOT NULL COMMENT '用户问题',
+    answer TEXT COMMENT 'AI 回答',
+    messageId VARCHAR(100) COMMENT 'Dify 消息 ID',
+    createTime DATETIME NOT NULL COMMENT '创建时间，精确到秒',
+    updateTime DATETIME NOT NULL COMMENT '更新时间，精确到秒',
+    INDEX idx_user_id (userId),
+    INDEX idx_conversation_id (conversationId)
 );
 
 -- 写入版块信息数据
