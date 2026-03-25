@@ -120,7 +120,6 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.10.2</version>
 		</dependency>
-
 	</dependencies>
 
 	<build>
@@ -139,32 +138,33 @@
 			</plugin>
 
 			<!-- mybatis 生成器插件：修正执行阶段为compile -->
-			<plugin>
-				<groupId>org.mybatis.generator</groupId>
-				<artifactId>mybatis-generator-maven-plugin</artifactId>
-				<version>${mybatis-generator-plugin-version}</version>
-				<executions>
-					<execution>
-						<id>Generate MyBatis Artifacts</id>
-						<phase>compile</phase> <!-- 改为编译阶段，自动触发 -->
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-				</executions>
-				<!-- 相关配置 -->
-				<configuration>
-					<!-- 打开日志 -->
-					<verbose>true</verbose>
-					<!-- 允许覆盖 -->
-					<overwrite>true</overwrite>
-					<!-- 配置文件路径（你的路径正确，保留） -->
-					<configurationFile>
-						src/main/resources/mybatis/generatorConfig.xml
-					</configurationFile>
-				</configuration>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.mybatis.generator</groupId>-->
+<!--				<artifactId>mybatis-generator-maven-plugin</artifactId>-->
+<!--				<version>${mybatis-generator-plugin-version}</version>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<id>Generate MyBatis Artifacts</id>-->
+<!--						<phase>compile</phase> &lt;!&ndash; 改为编译阶段，自动触发 &ndash;&gt;-->
+<!--						<goals>-->
+<!--							<goal>generate</goal>-->
+<!--						</goals>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--				&lt;!&ndash; 相关配置 &ndash;&gt;-->
+<!--				<configuration>-->
+<!--					&lt;!&ndash; 打开日志 &ndash;&gt;-->
+<!--					<verbose>true</verbose>-->
+<!--					&lt;!&ndash; 允许覆盖 &ndash;&gt;-->
+<!--					<overwrite>true</overwrite>-->
+<!--					&lt;!&ndash; 配置文件路径（你的路径正确，保留） &ndash;&gt;-->
+<!--					<configurationFile>-->
+<!--						src/main/resources/mybatis/generatorConfig.xml-->
+<!--					</configurationFile>-->
+<!--				</configuration>-->
+<!--			</plugin>-->
 		</plugins>
+		<finalName>forum</finalName>
 	</build>
 
 </project>

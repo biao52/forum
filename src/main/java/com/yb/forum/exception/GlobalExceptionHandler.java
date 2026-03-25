@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApplicationException.class)
     public AppResult applicationExceptionHandler (ApplicationException e) {
         // 打印异常信息
-        e.printStackTrace(); // 上生产之前要删除
+        e.printStackTrace();
         // 打印日志
         log.error(e.getMessage());
         if (e.getErrorResult() != null) {
