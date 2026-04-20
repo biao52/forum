@@ -11,6 +11,7 @@ import com.yb.forum.services.IUserService;
 import com.yb.forum.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -22,6 +23,7 @@ import java.util.List;
 
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class MessageServiceImpl implements IMessageService {
 
     @Resource

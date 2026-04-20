@@ -10,6 +10,7 @@ import com.yb.forum.services.IArticleService;
 import com.yb.forum.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ArticleReplyServiceImpl implements IArticleReplyService {
 
     @Resource
@@ -78,5 +80,44 @@ public class ArticleReplyServiceImpl implements IArticleReplyService {
         List<ArticleReply> result = articleReplyMapper.selectByArticleId(articleId);
         // 返回结果
         return result;
+    }
+    
+    @Override
+    public void deleteById(Long id) {
+        // 非空校验
+        if (id == null || id <= 0) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        
+        // 查询回复信息
+        ArticleReply reply = articleReplyMapper.selectByPrimaryKey(id);
+        if (reply == null) {
+            log.warn(ResultCode.FAILED_REPLY_NOT_EXISTS.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_REPLY_NOT_EXISTS));
+        }
+        
+        // 逻辑删除
+        reply.setDeleteState((byte) 1);
+        reply.setUpdateTime(new Date());
+        int row = articleReplyMapper.updateByPrimaryKeySelective(reply);
+        if (row != 1) {
+            log.warn(ResultCode.ERROR_SERVICES.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
+        }
+        
+        // 更新帖子表中的回复数（减1）
+        articleService.reduceOneReplyCountById(reply.getArticleId());
+        log.info("删除回复成功, reply id = " + id + ", article id = " + reply.getArticleId());
+    }
+    
+    @Override
+    public ArticleReply selectById(Long id) {
+        // 非空校验
+        if (id == null || id <= 0) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        return articleReplyMapper.selectByPrimaryKey(id);
     }
 }

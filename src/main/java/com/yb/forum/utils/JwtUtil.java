@@ -5,12 +5,17 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 
+import javax.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 
 public class JwtUtil {
     // 使用足够长的密钥（64 字节 = 512 位，满足 HS512 要求）
+
+
+
     private static final String SECRET_KEY = "forum-graduation-project-secret-key-2026-yangbiao-secure-jwt-token-key";
     private static final long EXPIRATION_TIME = 86400000; // 1 天 (24 小时)
     private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());

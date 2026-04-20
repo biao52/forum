@@ -33,15 +33,15 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss # 日期格式
     default-property-inclusion: NON_NULL # 不为 null 时序列化
 server:
-  port: 58080 # 自定义的服务端口号
+  port: 58081 # 自定义的服务端口号
 logging:
   pattern:
     dateformat: yyyy-MM-dd HH:mm:ss #  日期的显示格式
   level:
     root: info # 日志的默认级别
 #    com.yb.forum: debug # 指定包下的日志级别
-  file:
-    path: /log/forum_001 # 生产环境的日志目录
+#  file:
+#    path: /app/log # 生产环境的日志目录
 #    path: D:/log/bit_forum # 日志保存的路径
 
 # mybatis 相关配置，单独配置，顶格写
@@ -56,6 +56,8 @@ bit-forum:
   index: # 首页配置节点
     board-num: 9  # 首页中显示的版块个数
 
+jwt:
+  key: forum-graduation-project-secret-key-2026-yangbiao-secure-jwt-token-key
 # Dify 智能体配置
 dify:
   api-key: app-6mz0qer5TitWE3ubYAZlCrvN  # Dify API 密钥

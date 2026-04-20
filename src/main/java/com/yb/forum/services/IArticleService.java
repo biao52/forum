@@ -79,6 +79,12 @@ public interface IArticleService {
     void thumbsUpById (Long id);
 
     /**
+     * 取消点赞帖子
+     * @param id 帖子Id
+     */
+    void cancelThumbsUpById (Long id);
+
+    /**
      * 根据Id删除帖子
      * @param id 帖子Id
      */
@@ -91,6 +97,16 @@ public interface IArticleService {
      */
     void addOneReplyCountById (Long id);
 
-
+    /**
+     * 文章回复数量 -1
+     * @param id 帖子Id
+     */
+    void reduceOneReplyCountById (Long id);
+    
+    /**
+     * 文章浏览量 +1
+     * @param id 帖子Id
+     */
+    void addOneVisitCountById (Long id);
 
 }

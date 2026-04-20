@@ -22,6 +22,7 @@ import java.util.List;
 /**
  * @Author yangbiao
  */
+
 @Slf4j
 @Api(tags = "站内信接口")
 @RestController

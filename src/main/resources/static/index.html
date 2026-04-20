@@ -494,7 +494,7 @@
     // 成功后，跳转到 sign-in.html
     $('#index_user_logout').click(function () {
       $.ajax({
-        type : 'get',
+        type : 'post',
         url : 'user/logout',
         complete : function () {
           // 清除 localStorage 中的 token

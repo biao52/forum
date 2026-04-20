@@ -13,6 +13,7 @@ import com.yb.forum.services.IUserService;
 import com.yb.forum.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -23,6 +24,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ArticleServiceImpl implements IArticleService {
 
     @Resource
@@ -34,6 +36,7 @@ public class ArticleServiceImpl implements IArticleService {
     private IBoardService boardService;
 
     @Override
+
     public void create(Article article) {
         // 非空校验
         if (article == null || article.getUserId() == null || article.getBoardId() == null
@@ -260,6 +263,49 @@ public class ArticleServiceImpl implements IArticleService {
     }
 
     @Override
+    public void cancelThumbsUpById(Long id) {
+        // 非空校验
+        if (id == null || id <= 0) {
+            // 打印日志
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        // 获取帖子详情
+        Article article = articleMapper.selectByPrimaryKey(id);
+        // 帖子不存在
+        if (article == null || article.getDeleteState() == 1) {
+            // 打印日志
+            log.warn(ResultCode.FAILED_ARTICLE_NOT_EXISTS.toString());
+            // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS));
+        }
+        // 帖子状态异常
+        if (article.getState() == 1) {
+            // 打印日志
+            log.warn(ResultCode.FAILED_ARTICLE_BANNED.toString());
+            // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_ARTICLE_BANNED));
+        }
+        // 构造要更新的对象
+        Article updateArticle = new Article();
+        updateArticle.setId(article.getId());
+        // 确保点赞数不小于0
+        updateArticle.setLikeCount(Math.max(0, article.getLikeCount() - 1));
+        updateArticle.setUpdateTime(new Date());
+
+        // 调用DAO
+        int row = articleMapper.updateByPrimaryKeySelective(updateArticle);
+        if (row != 1) {
+            // 打印日志
+            log.warn(ResultCode.ERROR_SERVICES.toString());
+            // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
+        }
+
+    }
+
+    @Override
     public void deleteById(Long id) {
         // 非空校验
         if (id == null || id <= 0) {
@@ -333,6 +379,64 @@ public class ArticleServiceImpl implements IArticleService {
             // 打印日志
             log.warn(ResultCode.ERROR_SERVICES.toString());
             // 抛出异常
+            throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
+        }
+    }
+
+    @Override
+    public void reduceOneReplyCountById(Long id) {
+        // 非空校验
+        if (id == null || id <= 0) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        // 获取帖子记录
+        Article article = articleMapper.selectByPrimaryKey(id);
+        // 校验帖子状态
+        if (article == null || article.getDeleteState() == 1) {
+            log.warn(ResultCode.FAILED_ARTICLE_NOT_EXISTS.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS));
+        }
+        
+        // 构造更新对象
+        Article updateArticle = new Article();
+        updateArticle.setId(article.getId());
+        // 回复数 = 原回复数 - 1（确保不小于0）
+        updateArticle.setReplyCount(Math.max(0, article.getReplyCount() - 1));
+        updateArticle.setUpdateTime(new Date());
+        // 执行更新
+        int row = articleMapper.updateByPrimaryKeySelective(updateArticle);
+        if (row != 1) {
+            log.warn(ResultCode.ERROR_SERVICES.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
+        }
+    }
+
+    @Override
+    public void addOneVisitCountById(Long id) {
+        // 非空校验
+        if (id == null || id <= 0) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        // 获取帖子记录
+        Article article = articleMapper.selectByPrimaryKey(id);
+        // 校验帖子状态
+        if (article == null || article.getDeleteState() == 1) {
+            log.warn(ResultCode.FAILED_ARTICLE_NOT_EXISTS.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS));
+        }
+        
+        // 构造更新对象
+        Article updateArticle = new Article();
+        updateArticle.setId(article.getId());
+        // 浏览量 = 原浏览量 + 1
+        updateArticle.setVisitCount(article.getVisitCount() + 1);
+        updateArticle.setUpdateTime(new Date());
+        // 执行更新
+        int row = articleMapper.updateByPrimaryKeySelective(updateArticle);
+        if (row != 1) {
+            log.warn(ResultCode.ERROR_SERVICES.toString());
             throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
         }
     }

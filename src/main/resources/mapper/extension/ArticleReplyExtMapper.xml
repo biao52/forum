@@ -6,14 +6,19 @@
     <!-- 关联的用户对象的映射-->
     <association property="user" resultMap="com.yb.forum.dao.UserMapper.BaseResultMap"
       columnPrefix="u_"/>
+    <!-- 被回复的用户对象映射 -->
+    <association property="replyUser" resultMap="com.yb.forum.dao.UserMapper.BaseResultMap"
+      columnPrefix="ru_"/>
   </resultMap>
 
-  <!-- 根据帖子Id查询回复列表 -->
+  <!-- 根据帖子 Id 查询回复列表 -->
   <select id="selectByArticleId" parameterType="java.lang.Long" resultMap="AllInfoResultMap">
     select
     u.id as u_id,
     u.avatarUrl as u_avatarUrl,
     u.nickname as u_nickname,
+    ru.id as ru_id,
+    ru.nickname as ru_nickname,
     ar.id,
     ar.articleId,
     ar.postUserId,
@@ -24,10 +29,24 @@
     ar.state,
     ar.createTime,
     ar.updateTime
-    from t_article_reply ar, t_user u
-    where ar.postUserId = u.id
-    and ar.articleId = #{articleId,jdbcType=BIGINT}
+    from t_article_reply ar
+    left join t_user u on ar.postUserId = u.id
+    left join t_user ru on ar.replyUserId = ru.id
+    where ar.articleId = #{articleId,jdbcType=BIGINT}
     and ar.deleteState = 0
-    order by ar.createTime desc
+    order by ar.createTime asc
   </select>
+
+  <resultMap id="ArticleDetailMap" type="com.yb.forum.model.Article" extends="com.yb.forum.dao.ArticleMapper.BaseResultMap">
+    <association property="user" javaType="com.yb.forum.model.User">
+      <id column="u_id" property="id"/>
+      <result column="username" property="username"/>
+      <result column="nickname" property="nickname"/>
+      <result column="avatarUrl" property="avatarUrl"/>
+    </association>
+    <association property="board" javaType="com.yb.forum.model.Board">
+      <id column="b_id" property="id"/>
+      <result column="boardName" property="name"/>
+    </association>
+  </resultMap>
 </mapper>

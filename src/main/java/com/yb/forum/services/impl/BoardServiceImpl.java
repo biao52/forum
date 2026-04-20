@@ -8,6 +8,7 @@ import com.yb.forum.model.Board;
 import com.yb.forum.services.IBoardService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class BoardServiceImpl implements IBoardService {
 
     @Resource

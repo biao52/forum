@@ -21,12 +21,14 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @Author yangbiao
  */
+
 @Api(tags = "用户接口")
 @Slf4j
 @RestController
@@ -146,19 +148,28 @@ public class UserController {
             log.warn(ResultCode.FAILED_LOGIN.toString());
             return AppResult.failed(ResultCode.FAILED_LOGIN);
         }
-        
+
         // 2. 生成 JWT 令牌
         String token = JwtUtil.generateToken(user);
-        
+
         // 3. 将用户信息存入 Redis 缓存（用于快速查询）
         String cacheKey = USER_INFO_KEY + user.getId();
         redisTemplate.opsForValue().set(cacheKey, user, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
-        
-        // 4. 返回令牌和用户信息
+
+        // ================= 新增逻辑：判断角色并分配跳转路径 =================
+        String redirectUrl = "/index.html"; // 默认普通用户跳转到前台首页
+        // 假设实体类中 1 代表管理员，0 代表普通用户
+        if (user.getIsAdmin() != null && user.getIsAdmin() == 1) {
+            redirectUrl = "/admin.html"; // 管理员跳转到后台管理页面
+        }
+        // ==============================================================
+
+        // 4. 返回令牌、用户信息以及动态计算的跳转路径
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("token", token);
         responseData.put("user", user);
-        
+        responseData.put("redirectUrl", redirectUrl); // 将路径传给前端
+
         return AppResult.success(responseData);
     }
 
@@ -218,7 +229,7 @@ public class UserController {
     }
 
     @ApiOperation("退出登录")
-    @GetMapping("/logout")
+    @PostMapping("/logout")
     public AppResult logout (HttpServletRequest request) {
         // 从 JWT 令牌中获取用户 ID
         Long userId = null;
@@ -373,7 +384,27 @@ public class UserController {
         String cacheKey = USER_INFO_KEY + userId;
         redisTemplate.delete(cacheKey);
         log.info("清除用户缓存（修改密码）: {}", cacheKey);
-
         return AppResult.success("修改成功");
+    }
+
+    @ApiOperation("管理员-获取用户列表")
+    @GetMapping("/admin/list")
+    public AppResult<List<User>> getAdminUserList(@RequestParam(value = "username", required = false) String username) {
+        List<User> users = userService.selectAll(username);
+        return AppResult.success(users);
+    }
+
+    @ApiOperation("管理员-禁言/解禁用户")
+    @PostMapping("/admin/ban")
+    public AppResult banUser(@RequestParam("id") Long id, @RequestParam("state") Byte state) {
+        userService.updateUserState(id, state);
+        return AppResult.success();
+    }
+
+    @ApiOperation("管理员-删除用户")
+    @PostMapping("/admin/delete")
+    public AppResult deleteUser(@RequestParam("id") Long id) {
+        userService.deleteUser(id);
+        return AppResult.success();
     }
 }

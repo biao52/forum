@@ -15,10 +15,10 @@ public class ArticleReply {
     // 回复的用户编号
     private Long postUserId;
 
-    // 忽略，需求中楼中楼功能
+    // 被回复的评论 ID（两级平铺模式）
     private Long replyId;
 
-    // 忽略，需求中楼中楼功能
+    // 被回复的用户 ID（两级平铺模式）
     private Long replyUserId;
 
     // 回复的正文
@@ -41,4 +41,7 @@ public class ArticleReply {
 
     // 关联对象 - 回复的发布者
     private User user;
+    
+    // 关联对象 - 被回复的用户
+    private User replyUser;
 }

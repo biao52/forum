@@ -1,6 +1,8 @@
 package com.yb.forum.services;
 import com.yb.forum.model.User;
 
+import java.util.List;
+
 /**
  * 用户接口
  */
@@ -70,7 +72,12 @@ public interface IUserService {
     void modifyPassword (Long id, String newPassword, String oldPassword);
 
 
+    List<User> selectAll(String username);
 
+
+    void updateUserState(Long id, Byte state);
+
+    void deleteUser(Long id);
 
 
 

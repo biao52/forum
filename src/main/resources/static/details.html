@@ -224,6 +224,33 @@
     </div>
   </div>
 </div>
+
+<!-- 评论删除确认模态框 -->
+<div class="modal modal-blur fade" id="reply_delete_modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-status bg-danger"></div>
+      <div class="modal-body text-center py-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v2m0 4v.01" /><path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" /></svg>
+        <h3>确定要删除这条评论吗?</h3>
+        <div class="text-muted">点击确认该评论将被删除.</div>
+      </div>
+      <div class="modal-footer">
+        <div class="w-100">
+          <div class="row">
+            <div class="col"><a href="javascript:void(0);" class="btn w-100" data-bs-dismiss="modal">
+                取消
+              </a></div>
+            <div class="col"><a href="javascript:void(0);" class="btn btn-danger w-100" data-bs-dismiss="modal" id="reply_delete_btn">
+                删除
+              </a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
   $(function () {
     // ===================== 初始化回复编辑区 ===================== 
@@ -390,6 +417,16 @@
           + ' <span class="avatar avatar-xl mb-3 rounded" style="background-image: url(' + articleReply.user.avatarUrl + ')"></span>'
           + ' <h3 class="m-0 mb-1"><a href="javascript:void(0);" class="a_reply_user_profile">' + articleReply.user.nickname + '</a></h3>'
           + ' <div class="div_reply_send_message" style="margin-top: 10px;">'
+          + ' <a href="javascript:void(0);" class="btn btn-primary btn-reply" data-id="' + articleReply.id + '" data-nickname="' + articleReply.user.nickname + '">'
+          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-message-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">'
+          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>'
+          + ' <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1"></path>'
+          + ' <path d="M12 12l0 .01"></path>'
+          + ' <path d="M8 12l0 .01"></path>'
+          + ' <path d="M16 12l0 .01"></path>'
+          + ' </svg>'
+          + ' 回复'
+          + ' </a>'
           + ' <a href="javascript:void(0);" class="btn btn-primary btn_reply_send_message" data-bs-toggle="modal" data-bs-target="#index_message_modal">'
           + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mail" width="24" height="24"'
           + ' viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"' 
@@ -408,25 +445,38 @@
           + ' <div class="card-body">'
           + ' <div id="details_article_reply_content_' + articleReply.id + '"></div>'
           + ' </div>'
-          + ' <div class="card-footer bg-transparent mt-auto"'
-          + ' style="display: flex; justify-content: space-between; align-items: center;">'
-          + ' <div class="row">'
-          + ' <div class="col-auto d-none d-md-inline">'
-          + ' <ul class="list-inline list-inline-dots mb-0">'
-          + ' <li class="list-inline-item">'
-          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock-edit" width="24"'
-          + ' height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"'
-          + ' stroke-linecap="round" stroke-linejoin="round">'
-          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>'
-          + ' <path d="M21 12a9 9 0 1 0 -9.972 8.948c.32 .034 .644 .052 .972 .052"></path>'
-          + ' <path d="M12 7v5l2 2"></path>'
-          + ' <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z"></path>'
-          + ' </svg> '
-          + articleReply.createTime
-          + ' </li>'
-          + ' </ul>'
-          + ' </div>'
-          + ' </div>'
+          + ' <div class="card-footer bg-transparent mt-auto"' 
+          + ' style="display: flex; justify-content: space-between; align-items: center;">' 
+          + ' <div class="row">' 
+          + ' <div class="col-auto d-none d-md-inline">' 
+          + ' <ul class="list-inline list-inline-dots mb-0">' 
+          + ' <li class="list-inline-item">' 
+          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock-edit" width="24"' 
+          + ' height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"' 
+          + ' stroke-linecap="round" stroke-linejoin="round">' 
+          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>' 
+          + ' <path d="M21 12a9 9 0 1 0 -9.972 8.948c.32 .034 .644 .052 .972 .052"></path>' 
+          + ' <path d="M12 7v5l2 2"></path>' 
+          + ' <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z"></path>' 
+          + ' </svg> ' 
+          + articleReply.createTime 
+          + ' </li>' 
+          + ' </ul>' 
+          + ' </div>' 
+          + ' </div>' 
+          + ' <div class="col-auto reply-actions" style="display: none;">' 
+          + ' <a href="javascript:void(0);" class="btn btn-outline-danger btn-sm reply-delete" data-id="' + articleReply.id + '">' 
+          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">' 
+          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>' 
+          + ' <path d="M4 7l16 0"></path>' 
+          + ' <path d="M10 11l0 6"></path>' 
+          + ' <path d="M14 11l0 6"></path>' 
+          + ' <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>' 
+          + ' <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>' 
+          + ' </svg>' 
+          + ' 删除' 
+          + ' </a>' 
+          + ' </div>' 
           + ' </div>'
           + ' </div>'
           + ' </div>';
@@ -455,11 +505,55 @@
           profileUserId = articleReply.user.id;
           $('#bit-forum-content').load('profile.html');
         });
+        
+        // 检查是否显示删除按钮（评论作者或帖子作者）
+        let replyActions = replyItem.find('.reply-actions');
+        if (articleReply.user.id == currentUserId || article.userId == currentUserId) {
+          replyActions.show();
+        }
+        
+        // 绑定评论删除事件
+        let deleteBtn = replyItem.find('.reply-delete');
+        deleteBtn.click(function () {
+          let replyId = $(this).data('id');
+          // 存储当前要删除的评论 ID 到模态框
+          $('#reply_delete_btn').data('reply-id', replyId);
+          // 显示模态框
+          $('#reply_delete_modal').modal('show');
+        });
+        
+        // 绑定回复评论按钮事件
+        let replyBtn = replyItem.find('.btn-reply');
+        replyBtn.click(function () {
+          let replyId = $(this).data('id');
+          let nickname = $(this).data('nickname');
+          // 设置回复的评论 ID
+          $('#reply_to_id').val(replyId);
+          // 显示回复提示
+          $('#reply_to_user').text('回复 @' + nickname);
+          $('#reply_to_user').show();
+          // 滚动到回复框
+          $('html, body').animate({scrollTop: $('#details_article_reply').offset().top - 100}, 300);
+          // 聚焦到回复框
+          editor.focus();
+        });
+        
         // 添加到回复区
         replyArea.append(replyItem);
         
         // 处理内容
         editormd.markdownToHTML('details_article_reply_content_' + articleReply.id, { markdown: articleReply.content });
+        
+        // 如果是回复评论，显示"回复 @某人"
+        if (articleReply.replyId != null && articleReply.replyUserId != null) {
+          // 需要获取被回复用户的信息
+          // 这里通过 articleReply 对象中的信息来判断
+          // 由于当前查询没有包含被回复用户的信息，我们需要在前端做特殊处理
+          // 简化处理：在 content 前面添加"回复 @xxx"
+          let contentDiv = replyItem.find('#details_article_reply_content_' + articleReply.id);
+          let originalHtml = contentDiv.html();
+          contentDiv.html('<span style="color: #999; font-size: 12px;">回复 @用户' + articleReply.replyUserId + '：</span>' + originalHtml);
+        }
       });
     }
 
@@ -470,42 +564,91 @@
     // ====================== 处理点赞 ======================
     // url: '/article/thumbsUp?id=' + currentArticle.id
     // 成功后，修改点赞个数 currentArticle.likeCount = currentArticle.likeCount + 1;
+    let isLiked = false; // 记录当前点赞状态
     $('#details_btn_like_count').click(function () {
-      $.ajax({
-        type : 'post',
-        url : 'article/thumbsUp?id=' + currentArticle.id,
-        // 回调
-        success : function (respData) {
-          // 成功状态
-          if (respData.code == 0) {
-            // 成功
-            currentArticle.likeCount = currentArticle.likeCount + 1;
-            // 设置页面的值 
-            $('#details_article_likeCount').html(currentArticle.likeCount);
-            // 提示
-            $.toast({
-                heading: '成功',
-                text: '点赞成功',
-                icon: 'success'
-            });
-          } else {
+      if (isLiked) {
+        // 取消点赞
+        $.ajax({
+          type: 'post',
+          url: 'article/cancelThumbsUp?id=' + currentArticle.id,
+          // 回调
+          success: function (respData) {
+            // 成功状态
+            if (respData.code == 0) {
+              // 成功
+              currentArticle.likeCount = Math.max(0, currentArticle.likeCount - 1);
+              // 设置页面的值 
+              $('#details_article_likeCount').html(currentArticle.likeCount);
+              // 恢复点赞图标
+              $('#details_btn_like_count').html('<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"></path></svg> 点赞');
+              // 标记为未点赞状态
+              isLiked = false;
+              // 提示
+              $.toast({
+                  heading: '成功',
+                  text: '取消点赞成功',
+                  icon: 'success'
+              });
+            } else {
+              // 提示信息
+              $.toast({
+                    heading: '警告',
+                    text: respData.message,
+                    icon: 'warning'
+                });
+            }
+          },
+          error: function () {
             // 提示信息
             $.toast({
-                  heading: '警告',
-                  text: respData.message,
-                  icon: 'warning'
-              });
+                heading: '错误',
+                text: '访问出现问题，请与管理员联系.',
+                icon: 'error'
+            });
           }
-        },
-        error : function () {
-          // 提示信息
-          $.toast({
-              heading: '错误',
-              text: '访问出现问题，请与管理员联系.',
-              icon: 'error'
-          });
-        }
-      });
+        });
+      } else {
+        // 点赞
+        $.ajax({
+          type: 'post',
+          url: 'article/thumbsUp?id=' + currentArticle.id,
+          // 回调
+          success: function (respData) {
+            // 成功状态
+            if (respData.code == 0) {
+              // 成功
+              currentArticle.likeCount = currentArticle.likeCount + 1;
+              // 设置页面的值 
+              $('#details_article_likeCount').html(currentArticle.likeCount);
+              // 更改点赞图标为已点赞状态
+              $('#details_btn_like_count').html('<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"></path></svg> 已点赞');
+              // 标记为已点赞状态
+              isLiked = true;
+              // 提示
+              $.toast({
+                  heading: '成功',
+                  text: '点赞成功',
+                  icon: 'success'
+              });
+            } else {
+              // 提示信息
+              $.toast({
+                    heading: '警告',
+                    text: respData.message,
+                    icon: 'warning'
+                });
+            }
+          },
+          error: function () {
+            // 提示信息
+            $.toast({
+                heading: '错误',
+                text: '访问出现问题，请与管理员联系.',
+                icon: 'error'
+            });
+          }
+        });
+      }
     });
 
     // ====================== 回复帖子 ======================
@@ -619,6 +762,42 @@
       console.log('开始编辑');
       removeNavActive();
       $('#bit-forum-content').load('article_edit.html');
+    });
+
+    // ====================== 处理评论删除事件 ======================
+    $('#reply_delete_btn').click(function () {
+      let replyId = $(this).data('reply-id');
+      $.ajax({
+        type: 'post',
+        url: 'reply/delete?id=' + replyId,
+        success: function (respData) {
+          if (respData.code == 0) {
+            $.toast({
+              heading: '成功',
+              text: '删除成功',
+              icon: 'success'
+            });
+            // 更新回复数
+            currentArticle.replyCount = Math.max(0, currentArticle.replyCount - 1);
+            $('#details_article_replyCount').html(currentArticle.replyCount);
+            // 重新加载回复列表
+            loadArticleDetailsReply();
+          } else {
+            $.toast({
+              heading: '警告',
+              text: respData.message,
+              icon: 'warning'
+            });
+          }
+        },
+        error: function () {
+          $.toast({
+            heading: '错误',
+            text: '访问出现问题，请与管理员联系.',
+            icon: 'error'
+          });
+        }
+      });
     });
   });
 </script>

@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @Author yangbiao
  */
+
 @Api(tags = "回复接口")
 @Slf4j
 @RestController
@@ -47,8 +48,9 @@ public class ArticleReplyController {
     @ApiOperation("回复帖子")
     @PostMapping("/create")
     public AppResult create (HttpServletRequest request,
-                             @ApiParam("帖子Id") @RequestParam("articleId") @NonNull Long articleId,
-                             @ApiParam("帖子内容") @RequestParam("content") @NonNull String content) {
+                             @ApiParam("帖子 Id") @RequestParam("articleId") @NonNull Long articleId,
+                             @ApiParam("帖子内容") @RequestParam("content") @NonNull String content,
+                             @ApiParam("被回复的评论 ID") @RequestParam(value = "replyId", required = false) Long replyId) {
         // 从 JWT 令牌中获取用户 ID
         Long userId = null;
         String token = request.getHeader("Authorization");
@@ -87,11 +89,27 @@ public class ArticleReplyController {
             return AppResult.failed(ResultCode.FAILED_ARTICLE_BANNED);
         }
 
+        // 如果是回复评论，校验被回复的评论是否存在
+        Long replyUserId = null;
+        if (replyId != null) {
+            ArticleReply parentReply = articleReplyService.selectById(replyId);
+            if (parentReply == null || parentReply.getDeleteState() == 1) {
+                return AppResult.failed(ResultCode.FAILED_REPLY_NOT_EXISTS, "被回复的评论不存在");
+            }
+            // 确保被回复的评论属于同一篇文章
+            if (!parentReply.getArticleId().equals(articleId)) {
+                return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "评论不属于同一篇文章");
+            }
+            replyUserId = parentReply.getPostUserId();
+        }
+
         // 构建回复对象
         ArticleReply articleReply = new ArticleReply();
         articleReply.setArticleId(articleId);
         articleReply.setPostUserId(user.getId());
         articleReply.setContent(content);
+        articleReply.setReplyId(replyId);
+        articleReply.setReplyUserId(replyUserId);
         // 写入回复
         articleReplyService.create(articleReply);
 
@@ -137,5 +155,65 @@ public class ArticleReplyController {
         redisTemplate.opsForValue().set(cacheKey, articleReplies, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
 
         return AppResult.success(articleReplies);
+    }
+
+    @ApiOperation("删除回复")
+    @PostMapping("/delete")
+    public AppResult deleteReply (HttpServletRequest request,
+                                 @ApiParam("回复Id") @RequestParam("id") @NonNull Long id) {
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
+        // 判断用户是否已禁言
+        if (user.getState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_USER_BANNED);
+        }
+        
+        // 查询回复信息
+        ArticleReply reply = articleReplyService.selectById(id);
+        if (reply == null) {
+            return AppResult.failed(ResultCode.FAILED_REPLY_NOT_EXISTS);
+        }
+        
+        // 查询帖子信息
+        Article article = articleService.selectById(reply.getArticleId());
+        if (article == null || article.getDeleteState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
+        }
+        
+        // 权限检查：只有回复作者或帖子作者可以删除
+        if (user.getId() != reply.getPostUserId() && user.getId() != article.getUserId()) {
+            return AppResult.failed(ResultCode.FAILED_FORBIDDEN);
+        }
+        
+        // 调用Service
+        articleReplyService.deleteById(id);
+
+        // 清除该文章的回复列表缓存
+        String cacheKey = REPLY_LIST_KEY + reply.getArticleId();
+        redisTemplate.delete(cacheKey);
+        log.info("清除回复列表缓存: {}", cacheKey);
+
+        return AppResult.success();
     }
 }

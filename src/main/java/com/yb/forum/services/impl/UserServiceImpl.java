@@ -11,15 +11,18 @@ import com.yb.forum.utils.StringUtil;
 import com.yb.forum.utils.UUIDUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Author yangbiao
  */
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class UserServiceImpl implements IUserService {
 
     @Resource
@@ -358,5 +361,30 @@ public class UserServiceImpl implements IUserService {
             throw new ApplicationException(AppResult.failed(ResultCode.FAILED));
         }
 
+    }
+
+
+    @Override
+    public List<User> selectAll(String username) {
+        // 调用 Mapper 的过滤查询
+        return userMapper.selectAllWithFilter(username);
+    }
+
+    @Override
+    public void updateUserState(Long id, Byte state) {
+        User user = new User();
+        user.setId(id);
+        user.setState(state);
+        user.setUpdateTime(new Date());
+        userMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        User user = new User();
+        user.setId(id);
+        user.setDeleteState((byte) 1);
+        user.setUpdateTime(new Date());
+        userMapper.updateByPrimaryKeySelective(user);
     }
 }

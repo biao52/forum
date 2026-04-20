@@ -30,11 +30,12 @@
     m.receiveUserId,
     m.content,
     m.state,
+    m.deleteState,
     m.createTime,
     m.updateTime
-    from t_message m, t_user u
-    where m.postUserId = u.id
-    and m.deleteState = 0
+    from t_message m
+    left join t_user u on m.postUserId = u.id
+    where m.deleteState = 0
     and m.receiveUserId = #{receiveUserId,jdbcType=BIGINT}
     order by m.createTime desc, m.state asc
   </select>

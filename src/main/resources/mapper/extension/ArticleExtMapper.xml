@@ -2,22 +2,23 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yb.forum.dao.ArticleMapper">
 
-  <!-- 自定义结果集映射（关联用户+版块）-->
-  <resultMap id="AllInfoResultMap" type="com.yb.forum.model.Article" extends="ResultMapWithBLOBs">
-    <!-- 关联的用户的映射 -->
-    <association property="user" resultMap="com.yb.forum.dao.UserMapper.BaseResultMap"
-                 columnPrefix="u_" />
-    <!-- 关联版块的映射 -->
-    <association property="board" resultMap="com.yb.forum.dao.BoardMapper.BaseResultMap"
-                 columnPrefix="b_" />
+  <resultMap id="AllInfoResultMap" type="com.yb.forum.model.Article" extends="com.yb.forum.dao.ArticleMapper.BaseResultMap">
+    <association property="user" javaType="com.yb.forum.model.User">
+      <id column="u_id" property="id"/>
+      <result column="u_username" property="username"/>
+      <result column="u_nickname" property="nickname"/>
+      <result column="u_avatarUrl" property="avatarUrl"/>
+    </association>
+
+    <association property="board" javaType="com.yb.forum.model.Board">
+      <id column="b_id" property="id"/>
+      <result column="b_name" property="name"/>
+    </association>
   </resultMap>
 
   <!-- 查询所有未被删除的帖子列表，不包含content -->
   <select id="selectAll" resultMap="AllInfoResultMap">
-    select
-      u.id as u_id,
-      u.avatarUrl as u_avatarUrl,
-      u.nickname as u_nickname,
+    SELECT
       a.id,
       a.boardId,
       a.userId,
@@ -27,13 +28,23 @@
       a.likeCount,
       a.state,
       a.createTime,
-      a.updateTime
-    from
-      t_article a, t_user u
-    where
-      a.userId = u.id
-      and a.deleteState = 0
-    order by a.createTime desc
+      a.updateTime,
+      -- 查询用户表字段并起别名
+      u.id AS u_id,
+      u.username AS u_username,
+      u.nickname AS u_nickname,
+      u.avatarUrl AS u_avatarUrl,
+      -- 查询版块表字段并起别名
+      b.id AS b_id,
+      b.name AS b_name
+    FROM
+      t_article a
+        LEFT JOIN t_user u ON a.userId = u.id
+        LEFT JOIN t_board b ON a.boardId = b.id
+    WHERE
+      a.deleteState = 0
+    ORDER BY
+      a.createTime DESC
   </select>
 
   <!-- 根据版块ID查询所有未被删除的帖子列表，不包含content -->
@@ -178,6 +189,45 @@
           a.content LIKE CONCAT('%', #{keyword}, '%')
       )
     order by a.createTime desc
+  </select>
+
+  <select id="selectTotalCount" resultType="java.lang.Integer">
+    SELECT COUNT(*) FROM t_article WHERE deleteState = 0
+  </select>
+
+  <select id="selectTodayCount" resultType="java.lang.Integer">
+    SELECT COUNT(*) FROM t_article
+    WHERE deleteState = 0 AND DATE(createTime) = CURDATE()
+  </select>
+  <resultMap id="ArticleDetailMap" type="com.yb.forum.model.Article" extends="com.yb.forum.dao.ArticleMapper.BaseResultMap">
+    <association property="user" javaType="com.yb.forum.model.User">
+      <id column="u_id" property="id"/>
+      <result column="username" property="username"/>
+      <result column="nickname" property="nickname"/>
+      <result column="avatarUrl" property="avatarUrl"/>
+    </association>
+    <association property="board" javaType="com.yb.forum.model.Board">
+      <id column="b_id" property="id"/>
+      <result column="boardName" property="name"/>
+    </association>
+  </resultMap>
+
+  <select id="selectAllByBoardIdWithDetail" resultMap="ArticleDetailMap">
+    SELECT
+    a.*,
+    u.id as u_id, u.username, u.nickname, u.avatarUrl,
+    b.id as b_id, b.name as boardName
+    FROM t_article a
+    LEFT JOIN t_user u ON a.userId = u.id
+    LEFT JOIN t_board b ON a.boardId = b.id
+    WHERE a.deleteState = 0
+    <if test="boardId != null">
+      AND a.boardId = #{boardId}
+    </if>
+    <if test="keyword != null and keyword != ''">
+      AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR a.content LIKE CONCAT('%', #{keyword}, '%'))
+    </if>
+    ORDER BY a.createTime DESC
   </select>
 
 </mapper>

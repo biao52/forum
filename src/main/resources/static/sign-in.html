@@ -132,7 +132,7 @@
                 console.log('Token 已保存到 localStorage:', respData.data.token.substring(0, 50) + '...');
               }
               // 跳转到首页（添加时间戳强制刷新）
-              location.assign('/index.html?v=' + new Date().getTime());
+              window.location.href = respData.data.redirectUrl+"?v="+new Date().getTime()
             } else {
               // 提示信息
               $.toast({

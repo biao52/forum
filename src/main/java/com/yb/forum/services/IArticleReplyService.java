@@ -24,4 +24,18 @@ public interface IArticleReplyService {
      * @return
      */
     List<ArticleReply> selectByArticleId (Long articleId);
+    
+    /**
+     * 根据回复Id删除回复
+     * @param id 回复Id
+     */
+    @Transactional
+    void deleteById(Long id);
+    
+    /**
+     * 根据回复Id查询回复
+     * @param id 回复Id
+     * @return 回复对象
+     */
+    ArticleReply selectById(Long id);
 }

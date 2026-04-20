@@ -19,4 +19,5 @@ public interface BoardMapper {
     int updateByPrimaryKey(Board row);
 
     List<Board> selectByNum (@Param("num") Integer num);
+    int selectTotalCount();
 }

@@ -25,13 +25,16 @@ import javax.annotation.Resource;
       import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import com.yb.forum.utils.SensitiveFilterUtil;
+
 import java.util.concurrent.TimeUnit;
 
 /**
  * @Author yangbiao
  */
-@Api(tags = "文章接口")
+
 @Slf4j
+@Api(tags = "帖子接口")
 @RestController
 @RequestMapping("/article")
 public class ArticleController {
@@ -39,11 +42,13 @@ public class ArticleController {
     @Resource
     private IArticleService articleService;
     @Resource
-    private IBoardService boardService;
-    @Resource
     private IUserService userService;
     @Resource
+    private IBoardService boardService;
+    @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Resource
+    private SensitiveFilterUtil sensitiveFilterUtil;
 
     // Redis Key 前缀
     private static final String ARTICLE_LIST_KEY = "article:list:";
@@ -140,7 +145,12 @@ public class ArticleController {
         String cleanTitle = XssUtil.clean(title.trim());
         String cleanContent = XssUtil.clean(content.trim());
         
-        // 8. 封装文章对象
+        // 8. 敏感词过滤
+        if (sensitiveFilterUtil.containsSensitiveWord(cleanTitle) || sensitiveFilterUtil.containsSensitiveWord(cleanContent)) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "内容包含敏感词，请修改后重新发布");
+        }
+        
+        // 9. 封装文章对象
         Article article = new Article();
         article.setTitle(cleanTitle);
         article.setContent(cleanContent);
@@ -258,6 +268,18 @@ public class ArticleController {
             if (userId != null && userId == article.getUserId()) {
                 article.setOwn(true);
             }
+            
+            // 增加浏览量（异步，不影响返回速度）
+            new Thread(() -> {
+                try {
+                    articleService.addOneVisitCountById(id);
+                    // 清除缓存
+                    clearArticleDetailCache(id);
+                } catch (Exception e) {
+                    log.error("增加浏览量失败: {}", e.getMessage());
+                }
+            }).start();
+            
             return AppResult.success(article);
         }
 
@@ -273,6 +295,9 @@ public class ArticleController {
         if (userId != null && userId == article.getUserId()) {
             article.setOwn(true);
         }
+
+        // 增加浏览量
+        articleService.addOneVisitCountById(id);
 
         // 💾 存入Redis缓存（缓存完整对象，包括 user 信息）
         // ⚠️ 注意：不要设置 own 字段到缓存，因为不同用户看到的不同
@@ -391,8 +416,72 @@ public class ArticleController {
         if (user.getState() == 1) {
             return AppResult.failed(ResultCode.FAILED_USER_BANNED);
         }
+        
+        // 检查是否已经点赞
+        String likeKey = "article:like:" + id;
+        Boolean hasLiked = redisTemplate.opsForSet().isMember(likeKey, userId);
+        if (Boolean.TRUE.equals(hasLiked)) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "您已经点过赞了");
+        }
+        
         // 调用Service
         articleService.thumbsUpById(id);
+        
+        // 记录点赞信息到Redis
+        redisTemplate.opsForSet().add(likeKey, userId);
+        // 设置过期时间（30天）
+        redisTemplate.expire(likeKey, 30, TimeUnit.DAYS);
+
+        // 清除文章详情缓存（点赞数变化）
+        clearArticleDetailCache(id);
+
+        return AppResult.success();
+    }
+
+    @ApiOperation("取消点赞")
+    @PostMapping("/cancelThumbsUp")
+    public AppResult cancelThumbsUp (HttpServletRequest request,
+                                    @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
+        // 从 JWT 令牌中获取用户 ID
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                // JWT 解析失败
+            }
+        }
+        
+        // 如果没有用户 ID，返回错误
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+        
+        // 查询用户信息
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        
+        // 判断用户是否被禁言
+        if (user.getState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_USER_BANNED);
+        }
+        
+        // 检查是否已经点赞
+        String likeKey = "article:like:" + id;
+        Boolean hasLiked = redisTemplate.opsForSet().isMember(likeKey, userId);
+        if (Boolean.FALSE.equals(hasLiked)) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "您还没有点过赞");
+        }
+        
+        // 调用Service
+        articleService.cancelThumbsUpById(id);
+        
+        // 从Redis中移除点赞记录
+        redisTemplate.opsForSet().remove(likeKey, userId);
 
         // 清除文章详情缓存（点赞数变化）
         clearArticleDetailCache(id);
