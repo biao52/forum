@@ -34,8 +34,8 @@ public enum ResultCode {
 
     FAILED_MESSAGE_NOT_EXISTS   (1401, "站内信不存在"),
     ERROR_SERVICES              (2000, "服务器内部错误"),
-    ERROR_IS_NULL               (2001, "IS NULL.");
-
+    ERROR_IS_NULL               (2001, "IS NULL."),
+    ERROR_UPLOADED_IMAGE             (2002, "图片上传失败");
 
     // 状态码
     int code;

@@ -3,6 +3,7 @@
   <div class="container-xl">
     <div class="row align-items-center">
       <input type="text" style="display: none;" id="profile_user_id">
+<!--      <input type="file" id="avatar_upload_input" style="display: none;" accept="image/*">-->
       <div class="col-auto">
         <span id="profile_avatar" class="avatar avatar-lg rounded"
           style="background-image: url(./image/avatar02.jpeg)"></span>
@@ -95,6 +96,7 @@
 
 <script>
   $(function () {
+
     // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
     $.ajaxSetup({
       beforeSend: function(xhr) {

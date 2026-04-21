@@ -32,6 +32,11 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss # 日期格式
     default-property-inclusion: NON_NULL # 不为 null 时序列化
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
 server:
   port: 58081 # 自定义的服务端口号
 logging:
@@ -55,6 +60,13 @@ bit-forum:
     url: sign-in.html  # 未登录状况下强制跳转页面
   index: # 首页配置节点
     board-num: 9  # 首页中显示的版块个数
+
+# MinIO 配置
+minio:
+  endpoint: http://127.0.0.1:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucketName: forum-avatar
 
 jwt:
   key: forum-graduation-project-secret-key-2026-yangbiao-secure-jwt-token-key
