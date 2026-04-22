@@ -1,0 +1,213 @@
+<div class="container-xl">
+  <div class="page-header d-print-none">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <h2 class="page-title">数据看板</h2>
+        <div class="text-muted mt-1">实时概览论坛运营核心指标</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cards mt-2">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-primary text-white avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11" /><line x1="8" y1="8" x2="12" y2="8" /><line x1="8" y1="12" x2="12" y2="12" /><line x1="8" y1="16" x2="12" y2="16" /></svg>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium">文章总数</div>
+              <div class="text-muted" id="stat_article_count">加载中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-green text-white avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></svg>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium">用户总数</div>
+              <div class="text-muted" id="stat_user_count">加载中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-twitter text-white avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium">版块数量</div>
+              <div class="text-muted" id="stat_board_count">加载中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-facebook text-white avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium">今日新增帖</div>
+              <div class="text-muted" id="stat_today_article">加载中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cards mt-3">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">最近发布文章</h3>
+          <div class="card-actions">
+            <a href="javascript:void(0);" onclick="$('[data-target=\'admin_article.html\']').click();">查看全部</a>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table">
+            <thead>
+              <tr>
+                <th>标题</th>
+                <th>作者</th>
+                <th>版块</th>
+                <th>发布时间</th>
+                <th class="w-1">状态</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard_recent_articles">
+              <tr>
+                <td class="text-muted">加载中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h3 class="card-title">用户增长趋势 (近7日)</h3>
+          <div id="chart-user-growth" style="min-height: 240px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./dist/libs/apexcharts/dist/apexcharts.min.js" defer></script>
+<script>
+  $(function() {
+    /**
+     * 初始化图表
+     */
+    function initGrowthChart(dates, counts) {
+      if (window.ApexCharts) {
+        new ApexCharts(document.getElementById('chart-user-growth'), {
+          chart: {
+            type: "area",
+            fontFamily: 'inherit',
+            height: 240,
+            parentHeightOffset: 0,
+            toolbar: { show: false },
+            animations: { enabled: true },
+          },
+          dataLabels: { enabled: false },
+          fill: { opacity: .16, type: 'solid' },
+          stroke: { width: 2, lineCap: "round", curve: "smooth" },
+          series: [{
+            name: "新增用户",
+            data: counts || [5, 12, 8, 25, 18, 30, 45] // 模拟数据
+          }],
+          grid: {
+            padding: { top: -20, right: 0, left: -4, bottom: -4 },
+            strokeDashArray: 4,
+          },
+          xaxis: {
+            labels: { padding: 0 },
+            tooltip: { enabled: false },
+            axisBorder: { show: false },
+            categories: dates || ['04-11', '04-12', '04-13', '04-14', '04-15', '04-16', '04-17'],
+          },
+          yaxis: { labels: { padding: 4 } },
+          colors: ["#206bc4"],
+          legend: { show: false },
+        }).render();
+      }
+    }
+
+    /**
+     * 模拟加载数据逻辑 (对接后台接口时替换为真实的 AJAX)
+     */
+ function loadDashboardData() {
+      // 1. 获取统计概览
+      $.get('/admin/dashboard/statistics', function(res) {
+        if(res.code == 0) {
+          $('#stat_article_count').text(res.data.articleCount);
+          $('#stat_user_count').text(res.data.userCount);
+          $('#stat_board_count').text(res.data.boardCount);
+          $('#stat_today_article').text('+' + res.data.todayArticleCount);
+        }
+      });
+
+      // 2. 获取用户增长曲线并渲染图表
+      $.get('/admin/dashboard/userGrowth', function(res) {
+        if(res.code == 0) {
+          initGrowthChart(res.data.dates, res.data.counts);
+        }
+      });
+
+      // 3. 获取最新的 5 篇文章 (复用您现有的 getAllByBoardId 接口)
+      $.get('/article/getAllByBoardId', function(res) {
+        if(res.code == 0 && res.data) {
+          // 只取前 5 条
+          let recentArticles = res.data.slice(0, 5); 
+          let html = '';
+          recentArticles.forEach(item => {
+            let authorName = (item.user && (item.user.nickname || item.user.username)) ? (item.user.nickname || item.user.username) : ("ID: " + item.userId);
+            let boardName = (item.board && item.board.name) ? item.board.name : ("ID: " + item.boardId);
+            // 简单处理下日期格式
+            let timeStr = item.createTime ? item.createTime.split('T')[0] : '-';
+            html += `<tr>
+              <td>${item.title}</td>
+              <td class="text-muted">${authorName}</td>
+              <td class="text-muted"><span class="badge badge-outline text-azure">${boardName}</span></td>
+              <td class="text-muted">${timeStr}</td>
+              <td><span class="badge bg-success"></span> 正常</td>
+            </tr>`;
+          });
+          if(html === '') html = '<tr><td colspan="5" class="text-center text-muted">暂无文章</td></tr>';
+          $('#dashboard_recent_articles').html(html);
+        }
+      });
+    }
+
+    // 执行加载
+    loadDashboardData();
+  });
+</script>

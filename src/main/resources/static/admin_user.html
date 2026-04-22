@@ -1,0 +1,151 @@
+<div class="container-xl">
+  <div class="page-header d-print-none">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <h2 class="page-title">用户管理</h2>
+        <div class="text-muted mt-1">管理论坛注册用户及其权限状态</div>
+      </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="d-flex">
+          <input type="search" id="admin_user_search_input" class="form-control d-inline-block w-9 me-3" placeholder="按用户名搜索...">
+          <button id="admin_user_search_btn" class="btn btn-primary">查询</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>基本信息</th>
+            <th>角色</th>
+            <th>帖子数</th>
+            <th>注册时间</th>
+            <th>状态</th>
+            <th class="w-1">操作</th>
+          </tr>
+        </thead>
+        <tbody id="admin_user_tbody">
+          <tr><td colspan="7" class="text-center text-muted">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="card-footer d-flex align-items-center">
+      <div class="text-muted">
+        每页显示
+        <select id="admin_user_page_size" class="form-select form-select-sm d-inline-block w-auto mx-2">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+        </select>
+        条，共 <span id="admin_user_total_count" class="font-weight-bold">0</span> 人
+      </div>
+      <ul class="pagination m-0 ms-auto" id="admin_user_pagination"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+$(function() {
+  let allUsers = [];
+  let currentPage = 1;
+  let pageSize = parseInt($('#admin_user_page_size').val());
+
+  function loadUsers() {
+    let username = $('#admin_user_search_input').val().trim();
+    $.ajax({
+      type: 'get',
+      url: 'user/admin/list' + (username ? '?username=' + username : ''),
+      success: function(res) {
+        if (res.code == 0) {
+          allUsers = res.data || [];
+          renderTable();
+        }
+      }
+    });
+  }
+
+  function renderTable() {
+    $('#admin_user_total_count').text(allUsers.length);
+    let start = (currentPage - 1) * pageSize;
+    let data = allUsers.slice(start, start + pageSize);
+    
+    let html = '';
+    data.forEach(u => {
+      let stateBadge = u.state == 1 ? '<span class="badge bg-red-lt">已禁言</span>' : '<span class="badge bg-green-lt">正常</span>';
+      let avatar = u.avatarUrl || './image/avatar01.jpeg';
+      
+      html += `<tr>
+        <td>${u.id}</td>
+        <td>
+          <div class="d-flex align-items-center">
+            <span class="avatar avatar-sm me-2" style="background-image: url(${avatar})"></span>
+            <div class="flex-fill">
+              <div class="font-weight-medium">${u.username}</div>
+              <div class="text-muted small">${u.nickname}</div>
+            </div>
+          </div>
+        </td>
+        <td>${u.isAdmin == 1 ? '管理员' : '普通用户'}</td>
+        <td>${u.articleCount}</td>
+        <td>${u.createTime.split('T')[0]}</td>
+        <td>${stateBadge}</td>
+        <td>
+          <div class="btn-list flex-nowrap">
+            <button class="btn btn-sm btn-warning ban-btn" data-id="${u.id}" data-state="${u.state}">${u.state == 1 ? '解禁' : '禁言'}</button>
+            <button class="btn btn-sm btn-danger del-btn" data-id="${u.id}">删除</button>
+          </div>
+        </td>
+      </tr>`;
+    });
+    $('#admin_user_tbody').html(html || '<tr><td colspan="7" class="text-center">暂无数据</td></tr>');
+    renderPager();
+  }
+
+  function renderPager() {
+    let pages = Math.ceil(allUsers.length / pageSize) || 1;
+    let html = `<li class="page-item ${currentPage==1?'disabled':''}"><a class="page-link" href="#" data-page="${currentPage-1}">上一页</a></li>`;
+    for(let i=1; i<=pages; i++) {
+      html += `<li class="page-item ${i==currentPage?'active':''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+    }
+    html += `<li class="page-item ${currentPage==pages?'disabled':''}"><a class="page-link" href="#" data-page="${currentPage+1}">下一页</a></li>`;
+    $('#admin_user_pagination').html(html);
+  }
+
+  // 事件处理
+  $('#admin_user_search_btn').click(() => { currentPage = 1; loadUsers(); });
+  $('#admin_user_page_size').change(function() { pageSize = parseInt($(this).val()); currentPage = 1; renderTable(); });
+  $('#admin_user_pagination').on('click', '.page-link', function(e) {
+    e.preventDefault();
+    let p = $(this).data('page');
+    if(p > 0 && p <= Math.ceil(allUsers.length / pageSize)) { currentPage = p; renderTable(); }
+  });
+
+  // 禁言/解禁
+  $('#admin_user_tbody').on('click', '.ban-btn', function() {
+    let id = $(this).data('id');
+    let newState = $(this).data('state') == 1 ? 0 : 1;
+    if(confirm(`确定要${newState == 1 ? '禁言' : '解禁'}该用户吗？`)) {
+      $.post('user/admin/ban', { id: id, state: newState }, (res) => {
+        if(res.code == 0) { $.toast({heading:'成功', text:'操作成功', icon:'success'}); loadUsers(); }
+      });
+    }
+  });
+
+  // 删除
+  $('#admin_user_tbody').on('click', '.del-btn', function() {
+    let id = $(this).data('id');
+    if(confirm('确定要删除该用户吗？(逻辑删除)')) {
+      $.post('user/admin/delete', { id: id }, (res) => {
+        if(res.code == 0) { $.toast({heading:'成功', text:'用户已删除', icon:'success'}); loadUsers(); }
+      });
+    }
+  });
+
+  loadUsers();
+});
+</script>
