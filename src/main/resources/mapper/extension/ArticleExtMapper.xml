@@ -3,6 +3,7 @@
 <mapper namespace="com.yb.forum.dao.ArticleMapper">
 
   <resultMap id="AllInfoResultMap" type="com.yb.forum.model.Article" extends="com.yb.forum.dao.ArticleMapper.BaseResultMap">
+    <result column="content" jdbcType="LONGVARCHAR" property="content" />
     <association property="user" javaType="com.yb.forum.model.User">
       <id column="u_id" property="id"/>
       <result column="u_username" property="username"/>

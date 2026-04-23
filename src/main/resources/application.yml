@@ -38,7 +38,7 @@ spring:
       max-request-size: 10MB
 
 server:
-  port: 58081 # 自定义的服务端口号
+  port: 58080 # 自定义的服务端口号
 logging:
   pattern:
     dateformat: yyyy-MM-dd HH:mm:ss #  日期的显示格式
