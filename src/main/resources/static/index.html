@@ -370,16 +370,8 @@
           let user = respData.data;
           console.log('用户信息:', user);
           console.log('avatarUrl:', user.avatarUrl);
-          // 设置头像路径
-          let avatarUrl = defaultAvatarUrl;
-          if (user.avatarUrl && user.avatarUrl !== '') {
-            // 判断是否是完整 URL（以 http 开头）
-            if (user.avatarUrl.startsWith('http')) {
-              avatarUrl = user.avatarUrl;
-            } else {
-              // 如果是相对路径或文件名，使用默认头像
-              avatarUrl = defaultAvatarUrl;
-            }
+          if (!user.avatarUrl || !user.avatarUrl.startsWith('http')) {
+            user.avatarUrl = avatarUrl; // 默认头像
           }
           // 设置头像
           $('#index_nav_avatar').css('background-image', 'url(' + avatarUrl + ')');

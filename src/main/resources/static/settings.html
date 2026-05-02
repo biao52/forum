@@ -234,7 +234,7 @@
   // ================= 设置用户信息 =================
   function initUserInfo(user) {
     // 默认头像路径
-    if (!user.avatarUrl) {
+    if (!user.avatarUrl || !user.avatarUrl.startsWith('http')) {
       user.avatarUrl = avatarUrl;
     }
     // 用户Id
@@ -327,37 +327,32 @@
 
   // ================= 处理选择头像事件 =================
   function openFileDialog () {
-    // 触发选择文件按钮的点击事件
     $('#settings_input_chooiceAvatar').click();
 
-    // 监听文件选择
-    $('#settings_input_avatar').change(function() {
+    $('#settings_input_chooiceAvatar').off('change').on('change', function() {
       let file = this.files[0];
       if (!file) return;
-      // 简单的前端校验
       if (!file.type.startsWith('image/')) {
         $.toast({ heading: '提示', text: '请选择图片文件', icon: 'warning' });
         return;
       }
 
-      // 构造表单数据
       let formData = new FormData();
       formData.append("file", file);
 
-      // 发送 AJAX 请求
       $.ajax({
-        url: 'user/updateAvatar', // 对应 UserController 中的接口
+        url: 'user/updateAvatar',
         type: 'POST',
         data: formData,
-        processData: false, // 必须：不要处理数据
-        contentType: false, // 必须：不要设置内容类型
+        processData: false,
+        contentType: false,
         success: function(res) {
           if (res.code == 0) {
             $.toast({ heading: '成功', text: '头像上传成功', icon: 'success' });
             let newUrl = res.data;
-            // 更新本页面显示的头像
+            // 更新用户中心页面的头像
             $('#settings_avatar').css('background-image', 'url(' + newUrl + ')');
-            // 同步更新 index.html 导航栏头像
+            // ✅ 同步更新导航栏头像
             $('#index_nav_avatar').css('background-image', 'url(' + newUrl + ')');
           } else {
             $.toast({ heading: '警告', text: res.message, icon: 'warning' });
@@ -367,126 +362,7 @@
           $.toast({ heading: '错误', text: '头像上传失败，请稍后再试', icon: 'error' });
         }
       });
-  },
-
-  // ================= 修改用户昵称 =================
-  $('#setting_submit_nickname').click(function(){
-    // 获取值
-    let nicknameEl = $('#setting_input_nickname');
-    // 校验
-    if(!nicknameEl.val()) {
-      nicknameEl.focus();
-      return false;
-    }
-    // 构造数据
-    let nicknameObj = {
-      nickname : nicknameEl.val()
-    }
-    // 发送请求
-    changeUserInfo(nicknameObj);
-  });
-
-  // ================= 修改邮箱 =================
-  $('#setting_submit_email').click(function(){
-    // 获取值
-    let emailEl = $('#setting_input_email');
-    // 校验
-    if(!emailEl.val()) {
-      emailEl.focus();
-      return false;
-    }
-    // 构造数据
-    let emailObj = {
-      email : emailEl.val()
-    }
-    // 发送请求
-    changeUserInfo(emailObj);
-  });
-
-  // ================= 修改电话 =================
-  $('#setting_submit_phoneNum').click(function(){
-    // 获取值
-    let phoneNumEl = $('#setting_input_phoneNum');
-    // 校验
-    if(!phoneNumEl.val()) {
-      phoneNumEl.focus();
-      return false;
-    }
-    // 构造数据
-    let phoneNumObj = {
-      phoneNum : phoneNumEl.val()
-    }
-    // 发送请求
-    changeUserInfo(phoneNumObj);
-  });
-
-
-  // ================= 修改个人介绍 =================
-  $('#settings_submit_remark').click(function(){
-    // 获取值
-    let remarkEl = $('#settings_textarea_remark');
-    // 校验
-    if(!remarkEl.val()) {
-      remarkEl.focus();
-      return false;
-    }
-    // 构造数据
-    let remarkObj = {
-      remark : remarkEl.val()
-    }
-    // 发送请求
-    changeUserInfo(remarkObj);
-  });
-
-  // ================= 修改密码 =================
-  $('#settings_submit_password').click(function() {
-    // 获取值
-    let oldPasswordEl = $('#settings_input_oldPassword');
-    // 校验
-    if(!oldPasswordEl.val()) {
-      oldPasswordEl.focus();
-      return false;
-    }
-    // 获取值
-    let newPasswordEl = $('#settings_input_newPassword');
-    // 校验
-    if(!newPasswordEl.val()) {
-      newPasswordEl.focus();
-      return false;
-    }
-    // 获取值
-    let passwordRepeatEl = $('#settings_input_passwordRepeat');
-    // 校验
-    if(!passwordRepeatEl.val()) {
-      passwordRepeatEl.focus();
-      return false;
-    }
-
-    // 两次输入的密码是否相同
-    if (newPasswordEl.val() != passwordRepeatEl.val()) {
-      $.toast({
-        heading: '提示',
-        text: '两次输入的密码不相同',
-        icon: 'warning'
-      });
-      // 获取焦点
-      passwordRepeatEl.focus();
-      return false;
-    }
-
-    // 构造数据
-    let  passwrodObj = {
-      oldPassword : oldPasswordEl.val(),
-      newPassword : newPasswordEl.val(),
-      passwordRepeat : passwordRepeatEl.val()
-
-    }
-    // 发送请求
-    changeUserInfo(passwrodObj, 2);
-    // 清空输入框
-    oldPasswordEl.val('');
-    newPasswordEl.val('');
-    passwordRepeatEl.val('');
-  });
+    });
+  }
 
 </script>
