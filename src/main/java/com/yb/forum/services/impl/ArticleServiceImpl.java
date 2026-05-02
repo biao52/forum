@@ -98,7 +98,7 @@ public class ArticleServiceImpl implements IArticleService {
     }
 
     @Override
-    public List<Article> selectAllByBoardId(Long boardId) {
+    public List<Article> selectAllByBoardId(Long boardId, String keyword) {
         // 非空校验
         if (boardId == null || boardId <= 0) {
             // 打印日志
@@ -115,7 +115,7 @@ public class ArticleServiceImpl implements IArticleService {
             throw new ApplicationException(AppResult.failed(ResultCode.FAILED_BOARD_NOT_EXISTS));
         }
         // 调用DAO，查询
-        List<Article> articles = articleMapper.selectAllByBoardId(boardId);
+        List<Article> articles = articleMapper.selectAllByBoardId(boardId, keyword);
         // 返回结果
         return articles;
     }

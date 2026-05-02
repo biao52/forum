@@ -360,17 +360,34 @@
     }
     
     // 获取当前登录用户的信息
+    // 默认头像路径
+    let defaultAvatarUrl = './image/avatar01.jpeg';
     $.ajax({
       type : 'get',
       url : 'user/info',
       success : function(respData) {
         if (respData.code == 0) {
           let user = respData.data;
-          if (!user.avatarUrl) {
-            user.avatarUrl = avatarUrl;
+          console.log('用户信息:', user);
+          console.log('avatarUrl:', user.avatarUrl);
+          // 设置头像路径
+          let avatarUrl = defaultAvatarUrl;
+          if (user.avatarUrl && user.avatarUrl !== '') {
+            // 判断是否是完整 URL（以 http 开头）
+            if (user.avatarUrl.startsWith('http')) {
+              avatarUrl = user.avatarUrl;
+            } else {
+              // 如果是相对路径或文件名，使用默认头像
+              avatarUrl = defaultAvatarUrl;
+            }
           }
-          $('#index_nav_avatar').css('background-image', 'url(' + user.avatarUrl + ')');
-          $('#index_nav_nickname').html(user.nickname);
+          // 设置头像
+          $('#index_nav_avatar').css('background-image', 'url(' + avatarUrl + ')');
+          // 设置昵称
+          if (user.nickname) {
+            $('#index_nav_nickname').html(user.nickname);
+          }
+          // 设置用户类型
           let subName = user.isAdmin == 1 ? '管理员' : '普通用户';
           $('#index_nav_name_sub').html(subName);
           currentUserId = user.id;
@@ -380,6 +397,7 @@
         }
       },
       error : function (xhr, status) {
+        console.error('获取用户信息失败:', xhr.status, status);
         if (xhr.status === 401) {
           // 未授权，跳转到登录页
           handleLoginFailure();

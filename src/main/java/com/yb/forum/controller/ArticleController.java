@@ -215,7 +215,7 @@ public class ArticleController {
             if (boardId == null) {
                 articles = articleService.selectAll();
             } else {
-                articles = articleService.selectAllByBoardId(boardId);
+                articles = articleService.selectAllByBoardId(boardId, null);
             }
         } else {
             // 🔍 关键字搜索（标题 OR 内容）

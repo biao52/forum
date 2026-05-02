@@ -39,9 +39,10 @@ public interface IArticleService {
     /**
      * 根据版块Id查询所有帖子列表
      * @param boardId 版块Id
+     * @param keyword 搜索关键字（可选）
      * @return
      */
-    List<Article> selectAllByBoardId (Long boardId);
+    List<Article> selectAllByBoardId (Long boardId, String keyword);
 
     /**
      * 根据用户Id查询帖子列表

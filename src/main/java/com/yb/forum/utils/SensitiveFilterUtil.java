@@ -12,10 +12,8 @@ import java.util.regex.Pattern;
  */
 @Component
 public class SensitiveFilterUtil {
-    
     // 敏感词集合
     private Set<String> sensitiveWords = new HashSet<>();
-    
     // 初始化敏感词列表
     @PostConstruct
     public void init() {

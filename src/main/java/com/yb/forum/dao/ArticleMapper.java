@@ -31,7 +31,7 @@ public interface ArticleMapper {
      * @param boardId 版块Id
      * @return
      */
-    List<Article> selectAllByBoardId (@Param("boardId") Long boardId);
+    List<Article> selectAllByBoardId (@Param("boardId") Long boardId, @Param("keyword") String keyword);
 
     /**
      * 根据帖子Id查询详情

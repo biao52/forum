@@ -6,7 +6,7 @@
 <!--      <input type="file" id="avatar_upload_input" style="display: none;" accept="image/*">-->
       <div class="col-auto">
         <span id="profile_avatar" class="avatar avatar-lg rounded"
-          style="background-image: url(./image/avatar02.jpeg)"></span>
+          style="background-image: url(./image/avatar01.jpeg)"></span>
       </div>
       <div class="col">
         <h1 id="profile_nickname" class="fw-bold"></h1>
@@ -114,13 +114,16 @@
     }
     // ============= 获取用户信息 =============
     // 成功时调用initProfileUserInfo()方法，初始化用户数据
+    console.log('profile.html 开始请求用户信息, queryString:', userInfoQueryString);
     $.ajax({
       type : 'get',
       url : 'user/info' + userInfoQueryString,
       // 回调
       success : function (respData) {
+        console.log('profile.html 用户信息响应:', respData);
         if (respData.code == 0) {
           // 成功
+          console.log('profile.html 调用 initProfileUserInfo');
           initProfileUserInfo(respData.data);
         } else {
           // 提示信息
@@ -131,7 +134,8 @@
             });
           }
         },
-        error : function () {
+        error : function (xhr, status) {
+          console.error('profile.html 获取用户信息失败:', xhr.status, status);
           // 提示信息
           $.toast({
               heading: '错误',
@@ -145,8 +149,16 @@
     function initProfileUserInfo(user) {
       console.log(user);
       // 默认头像路径
-      if (!user.avatarUrl) {
-        user.avatarUrl = avatarUrl;
+      let defaultAvatarUrl = './image/avatar01.jpeg';
+      let avatarUrl = defaultAvatarUrl;
+      if (user.avatarUrl && user.avatarUrl !== '') {
+        // 判断是否是完整 URL（以 http 开头）
+        if (user.avatarUrl.startsWith('http')) {
+          avatarUrl = user.avatarUrl;
+        } else {
+          // 如果是相对路径或文件名，使用默认头像
+          avatarUrl = defaultAvatarUrl;
+        }
       }
       console.log('currentUserId = '+currentUserId);
       // 站内信按钮
@@ -161,7 +173,7 @@
       // 设置用户ID
       $('#profile_user_id').val(user.id);
       // 设置头像
-      $('#profile_avatar').css('background-image', 'url(' + user.avatarUrl + ')');
+      $('#profile_avatar').css('background-image', 'url(' + avatarUrl + ')');
       // 用户昵称
       $('#profile_nickname').html(user.nickname);
       // 发贴数

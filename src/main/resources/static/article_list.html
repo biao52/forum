@@ -189,6 +189,10 @@
           // 成功：先保存所有帖子数据，再渲染当前页并构建分页
           allArticles = respData.data || [];
           currentPage = 1;
+          // 用实际查询到的帖子数量更新显示
+          if (boardData) {
+            $('#article_list_count_board').html('帖子数量: ' + allArticles.length);
+          }
           renderCurrentPage();
         } else {
           // 失败

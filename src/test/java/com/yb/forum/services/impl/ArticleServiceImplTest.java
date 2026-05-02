@@ -41,7 +41,7 @@ class ArticleServiceImplTest {
 
     @Test
     void selectAllByBoardId() throws JsonProcessingException {
-        List<Article> articles = articleService.selectAllByBoardId(3l);
+        List<Article> articles = articleService.selectAllByBoardId(3l, null);
         System.out.println(objectMapper.writeValueAsString(articles));
     }
 
