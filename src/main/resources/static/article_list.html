@@ -295,14 +295,15 @@
           return;
         }
         // 设置默认头像
-        if (!article.user.avatarUrl) {
-          article.user.avatarUrl = avatarUrl;
+        let finalAvatarUrl = avatarUrl;
+        if (article.user.avatarUrl && article.user.avatarUrl.startsWith('http')) {
+          finalAvatarUrl = article.user.avatarUrl;
         }
         // 构造HTML
         let articleHtmlStr = '<div>'
                 + ' <div class="row">'
                 + ' <div class="col-auto">'
-                + ' <span class="avatar" style="background-image: url(' + article.user.avatarUrl + ')"></span>'
+                + ' <span class="avatar" style="background-image: url(' + finalAvatarUrl + ')"></span>'
                 + ' </div>'
                 + ' <div class="col">'
                 + ' <div class="text-truncate">'

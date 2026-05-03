@@ -1,0 +1,87 @@
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    password: # 本地Redis无密码
+    database: 0
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+    timeout: 10000ms
+  application:
+    name: 论坛系统
+  output:
+    ansi:
+      enabled: ALWAYS # 控制台彩色日志
+  datasource:
+    url: jdbc:mysql://localhost:3306/forum_db_001?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+  web:
+    resources:
+      static-locations: classpath:/static/
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: NON_NULL
+  servlet:
+    multipart:
+      max-file-size: 5MB # 本地调试文件上传限制
+      max-request-size: 10MB
+
+server:
+  port: 58080 # 本地端口
+logging:
+  pattern:
+    dateformat: yyyy-MM-dd HH:mm:ss
+  level:
+    root: info
+    # com.yb.forum: debug # 本地可临时开启调试日志
+  # 本地不输出日志文件，仅控制台
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 控制台打印SQL
+
+# 项目自定义配置
+bit-forum:
+  login:
+    url: sign-in.html
+  index:
+    board-num: 9
+
+# MinIO 本地配置
+minio:
+  endpoint: http://127.0.0.1:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucketName: forum-avatar
+
+# JWT 配置
+jwt:
+  key: forum-graduation-project-secret-key-2026-yangbiao-secure-jwt-token-key
+
+# Dify 本地配置
+dify:
+  api-key: app-6mz0qer5TitWE3ubYAZlCrvN
+  base-url: http://localhost
+  app-id: iNbAp4U4LEZ7Zh5q
+  timeout: 30000
+  system-prompt: |
+    你是论坛智能助手，专门为论坛用户提供帮助。你的职责包括：
+    1. 回答用户关于论坛使用的问题
+    2. 提供技术支持和指导
+    3. 解答用户的疑问
+    4. 保持友好、专业、耐心的态度
+    5. 回答简洁清晰，避免冗长
+    6. 如果遇到无法回答的问题，礼貌地告知用户
+    请注意：
+    - 使用中文回答
+    - 语气亲切自然
+    - 提供准确、有用的信息

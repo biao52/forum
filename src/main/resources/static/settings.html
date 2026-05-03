@@ -267,12 +267,30 @@
 
             if (res.code == 0) {
               const newAvatarUrl = res.data; // MinIO 返回的完整 URL
+              console.log('头像上传成功，返回的 URL:', newAvatarUrl);
 
-              // 用 MinIO 真实 URL 替换头像（保证刷新后也正确）
-              $('#settings_avatar').css('background-image', 'url(' + newAvatarUrl + ')');
-
-              // 同步更新首页右上角导航栏头像
-              $('#index_nav_avatar').css('background-image', 'url(' + newAvatarUrl + ')');
+              // 校验返回的 URL 是否有效
+              if (newAvatarUrl && newAvatarUrl.startsWith('http')) {
+                // 用 MinIO 真实 URL 替换头像（保证刷新后也正确）
+                $('#settings_avatar').css('background-image', 'url(' + newAvatarUrl + ')');
+                // 同步更新首页右上角导航栏头像
+                $('#index_nav_avatar').css('background-image', 'url(' + newAvatarUrl + ')');
+              } else {
+                // 如果返回的 URL 无效，重新请求用户信息获取最新头像
+                $.ajax({
+                  type: 'get',
+                  url: 'user/info',
+                  success: function(userResp) {
+                    if (userResp.code == 0 && userResp.data) {
+                      const finalUrl = (userResp.data.avatarUrl && userResp.data.avatarUrl.startsWith('http'))
+                              ? userResp.data.avatarUrl
+                              : defaultAvatarUrl;
+                      $('#settings_avatar').css('background-image', 'url(' + finalUrl + ')');
+                      $('#index_nav_avatar').css('background-image', 'url(' + finalUrl + ')');
+                    }
+                  }
+                });
+              }
               $.toast({ heading: '成功', text: '头像修改成功！', icon: 'success' });
 
             } else {
