@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,57 +236,53 @@ public class UserController {
 
 
 
-        @ApiOperation("上传并修改用户头像")
-        @PostMapping("/updateAvatar")
-        public AppResult updateAvatar(HttpServletRequest request,
-                                      @ApiParam("头像文件") @RequestParam("file") MultipartFile file) {
-            // 1. 校验文件是否为空
-            if (file == null || file.isEmpty()) {
-                return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "请选择要上传的图片");
-            }
+    @ApiOperation("上传并修改用户头像")
+    @PostMapping("/updateAvatar")
+    public AppResult updateAvatar(HttpServletRequest request,
+                                  @ApiParam("头像文件") @RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "请选择要上传的图片");
+        }
 
-            // 2. 从 JWT 中获取当前登录用户的 ID
-            Long userId = null;
-            String token = request.getHeader("Authorization");
-            if (token != null && token.startsWith("Bearer ")) {
-                try {
-                    userId = JwtUtil.getUserIdFromToken(token.substring(7));
-                } catch (Exception e) {
-                    log.error("JWT解析失败");
-                }
-            }
-            if (userId == null) {
-                return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED);
-            }
-
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
             try {
-                // 3. 将文件上传到 MinIO，获取公开的 URL
-                String avatarUrl = minioUtil.uploadAvatar(file);
-
-                // 4. 更新数据库中的用户信息
-                User user = userService.selectById(userId);
-                if (user == null) {
-                    return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS);
-                }
-
-                User updateUser = new User();
-                updateUser.setId(userId);
-                updateUser.setAvatarUrl(avatarUrl);
-                userService.modifyInfo(updateUser); // 复用您现有的修改信息接口
-
-                // 5. 更新 Redis 中的用户信息缓存，保证前台立即生效
-                user.setAvatarUrl(avatarUrl);
-                String cacheKey = USER_INFO_KEY + userId;
-                redisTemplate.opsForValue().set(cacheKey, user, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
-
-                // 返回最新的头像 URL 给前端
-                return AppResult.success(avatarUrl);
-
+                userId = JwtUtil.getUserIdFromToken(token.substring(7));
             } catch (Exception e) {
-                log.error("头像上传失败: ", e);
-                return AppResult.failed(ResultCode.ERROR_UPLOADED_IMAGE);
+                log.error("JWT解析失败");
             }
         }
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED);
+        }
+
+        try {
+            String newAvatarUrl = minioUtil.uploadAvatar(file);
+
+            // ✅ 直接构造 User 对象走 updateByPrimaryKeySelective，
+            //    不走 modifyInfo（modifyInfo 没有处理 avatarUrl 字段）
+            User updateUser = new User();
+            updateUser.setId(userId);
+            updateUser.setAvatarUrl(newAvatarUrl);
+            updateUser.setUpdateTime(new Date());
+            userService.updateAvatarById(updateUser); // 见下方新增方法
+
+            // 更新 Redis 缓存
+            String cacheKey = USER_INFO_KEY + userId;
+            User cachedUser = (User) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedUser != null) {
+                cachedUser.setAvatarUrl(newAvatarUrl);
+                redisTemplate.opsForValue().set(cacheKey, cachedUser, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+            }
+
+
+            return AppResult.success(newAvatarUrl);
+        } catch (Exception e) {
+            log.error("头像上传失败: ", e);
+            return AppResult.failed(ResultCode.ERROR_UPLOADED_IMAGE);
+        }
+    }
 
     @ApiOperation("退出登录")
     @PostMapping("/logout")

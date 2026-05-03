@@ -19,9 +19,7 @@
           <div class="card-body">
             <div class="list-group list-group-transparent">
               <a href="javascript:void(0);"
-                class="list-group-item list-group-item-action d-flex align-items-center active">我的账户</a>
-              <!-- <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">修改密码</a>
-                      <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">个人简介</a> -->
+                 class="list-group-item list-group-item-action d-flex align-items-center active">我的账户</a>
             </div>
           </div>
         </div>
@@ -30,20 +28,35 @@
             <!-- 昵称 -->
             <h2 id="settings_nickname" class="mb-4"></h2>
             <input type="text" style="display: none;" id="settings_user_id">
+
+            <!-- ===== 头像区域 ===== -->
             <div class="row align-items-center">
               <div class="col-auto">
-                <a id="settings_avatar" class="avatar avatar-xl" style="background-image: url(./image/avatar02.jpeg)"
-                  onclick="openFileDialog()"></a>
-                <!-- 文件选择 -->
-                <input type="file" class="form-control" style="display: none;" id="settings_input_chooiceAvatar">
+                <!-- 头像展示，点击也可触发选择 -->
+                <a id="settings_avatar"
+                   class="avatar avatar-xl"
+                   style="background-image: url(./image/avatar02.jpeg); cursor: pointer;"
+                   onclick="openFileDialog()">
+                </a>
+                <!-- 隐藏的文件输入框，只接受图片 -->
+                <input type="file"
+                       id="settings_input_chooiceAvatar"
+                       style="display: none;"
+                       accept="image/*">
               </div>
-
-              <div class="col-auto"><a href="javascript:void(0);" class="btn" onclick="openFileDialog()">
+              <div class="col-auto">
+                <a href="javascript:void(0);" class="btn" onclick="openFileDialog()">
                   修改头像
                 </a>
-
+                <!-- 上传中的 loading 提示，默认隐藏 -->
+                <span id="avatar_uploading" style="display:none; margin-left:8px;" class="text-muted">
+                  <span class="spinner-border spinner-border-sm" role="status"></span>
+                  上传中...
+                </span>
               </div>
             </div>
+            <!-- ===== 头像区域结束 ===== -->
+
             <h3 class="card-title mt-4">昵称</h3>
             <div class="row">
               <div class="col-9">
@@ -90,48 +103,34 @@
             <h3 class="card-title mt-4">修改密码</h3>
             <div>
               <div class="row g-3">
-                <!-- 表单 -->
                 <div class="col-9">
                   <form autocomplete="off" novalidate>
                     <div class="mb-2">
-                      <label class="form-label required">
-                        原密码
-                      </label>
+                      <label class="form-label required">原密码</label>
                       <div class="input-group input-group-flat">
                         <input id="settings_input_oldPassword" type="password" class="form-control" placeholder="请输入密码" autocomplete="off">
                         <span class="input-group-text">
-                          <a href="#" class="link-secondary" title="显示密码"
-                            data-bs-toggle="tooltip"><!-- Download SVG icon from http://tabler-icons.io/i/eye -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                              stroke-linecap="round" stroke-linejoin="round">
+                          <a href="#" class="link-secondary" title="显示密码" data-bs-toggle="tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                               <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                              <path
-                                d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
+                              <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
                             </svg>
                           </a>
                         </span>
                         <div class="invalid-feedback">原密码不能为空</div>
                       </div>
                     </div>
-
                     <div class="mb-2">
-                      <label class="form-label required">
-                        新原密码
-                      </label>
+                      <label class="form-label required">新密码</label>
                       <div class="input-group input-group-flat">
                         <input id="settings_input_newPassword" type="password" class="form-control" placeholder="请输入密码" autocomplete="off">
                         <span class="input-group-text">
-                          <a href="#" class="link-secondary" title="显示密码"
-                            data-bs-toggle="tooltip"><!-- Download SVG icon from http://tabler-icons.io/i/eye -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                              stroke-linecap="round" stroke-linejoin="round">
+                          <a href="#" class="link-secondary" title="显示密码" data-bs-toggle="tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                               <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                              <path
-                                d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
+                              <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
                             </svg>
                           </a>
                         </span>
@@ -139,28 +138,21 @@
                       </div>
                     </div>
                     <div class="mb-2">
-                      <label class="form-label required">
-                        确认密码
-                      </label>
+                      <label class="form-label required">确认密码</label>
                       <div class="input-group input-group-flat">
                         <input id="settings_input_passwordRepeat" type="password" class="form-control" placeholder="请输入密码" autocomplete="off">
                         <span class="input-group-text">
-                          <a href="#" class="link-secondary" title="显示密码"
-                            data-bs-toggle="tooltip"><!-- Download SVG icon from http://tabler-icons.io/i/eye -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                              stroke-linecap="round" stroke-linejoin="round">
+                          <a href="#" class="link-secondary" title="显示密码" data-bs-toggle="tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                               <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                              <path
-                                d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
+                              <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
                             </svg>
                           </a>
                         </span>
                         <div class="invalid-feedback">确认密码不能为空</div>
                       </div>
                     </div>
-
                     <div class="form-footer">
                       <button id="settings_submit_password" type="button" class="btn btn-outline-danger w-100">提交修改</button>
                     </div>
@@ -172,8 +164,7 @@
             <h3 class="card-title mt-4">个人简介</h3>
             <div class="row">
               <div class="col-9">
-                <textarea id="settings_textarea_remark" class="form-control" placeholder="写点自我介绍，可以让朋友们了解你..."
-                  rows="5"></textarea>
+                <textarea id="settings_textarea_remark" class="form-control" placeholder="写点自我介绍，可以让朋友们了解你..." rows="5"></textarea>
                 <div class="invalid-feedback">个人简介不能为空</div>
               </div>
               <div class="col-3">
@@ -183,186 +174,269 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   </div>
 
   <script>
-  $(function() {
-    // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
-    $.ajaxSetup({
-      beforeSend: function(xhr) {
-        const token = localStorage.getItem('token');
-        if (token) {
-          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        }
-      }
-    });
-
-    // ================= 获取用户详情，初始化页面内容 ===================
-    // 发送AJAX请求，成功时 调用initUserInfo方法，完成页面数据初始化
-    $.ajax({
-      type : 'get',
-      url : 'user/info',
-      // 回调
-      success : function (respData) {
-        if (respData.code == 0) {
-          // 成功
-          initUserInfo(respData.data);
-        } else {
-          // 提示信息
-          $.toast({
-                heading: '警告',
-                text: respData.message,
-                icon: 'warning'
-            });
+    $(function() {
+      // ==================== 全局 AJAX 设置：自动添加 JWT Token ====================
+      $.ajaxSetup({
+        beforeSend: function(xhr) {
+          const token = localStorage.getItem('token');
+          if (token) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
           }
-        },
-        error : function () {
-          // 提示信息
-          $.toast({
-              heading: '错误',
-              text: '访问出现问题，请与管理员联系.',
-              icon: 'error'
-          });
         }
-    });
-  });
-
-  // ================= 设置用户信息 =================
-  function initUserInfo(user) {
-    // 默认头像路径
-    if (!user.avatarUrl || !user.avatarUrl.startsWith('http')) {
-      user.avatarUrl = avatarUrl;
-    }
-    // 用户Id
-    $('#settings_user_id').val(user.id);
-    // title 昵称
-    $('#settings_nickname').html(user.nickname);
-    // 头像
-    $('#settings_avatar').css('background-image', 'url(' + user.avatarUrl + ')');
-    // 昵称
-    $('#setting_input_nickname').val(user.nickname);
-    // 邮箱
-    $('#setting_input_email').val(user.email);
-    // 电话
-    $('#setting_input_phoneNum').val(user.phoneNum);
-    // 个人简历
-    $('#settings_textarea_remark').html(user.remark);
-  }
-
-  // ================= 封装ajax请求 =================
-  function changeUserInfo(userInfo, type) {
-    // 校验用户信息
-    if (!userInfo) {
-      $.toast({
-        heading: '提示',
-        text: '请检查要修改的内容是否正确或联系管理员',
-        icon: 'info'
       });
-      return;
-    }
 
-    // 定义接口路径
-    let userURL = 'user/modifyInfo';
-    if (type == 1) {
-      userURL = 'user/modifyInfo';
-    } else if (type == 2) {
-      userURL = 'user/modifyPwd';
-    }
+      // ================= 获取用户详情，初始化页面内容 ===================
 
-    // 发送请求，提示响应结果
-    $.ajax({
-      type : 'post',
-      url : userURL,
-      contentType : 'application/x-www-form-urlencoded',
-      data : userInfo,
-      // 回调
-      success : function (respData) {
-        if (respData.code == 0) {
-          // 获取用户对象
-          let user = respData.data;
 
-          // user对象有效，并且昵称有效 修改页面中的内容
-          if (user && user.nickname) {
-            // 个人中心页面中的昵称
-            $('#settings_nickname').html(user.nickname);
-            // 导航栏中的昵称
-            $('#index_nav_nickname').html(user.nickname);
-          }
-          // 如查密码修改成功强制登录
-          if (type == 2) {
-            location.assign('sign-in.html');
-            return;
-          }
-          // 提示信息
-          $.toast({
-                heading: '成功',
-                text: respData.message,
-                icon: 'success'
-            });
-        } else {
-          // 提示信息
-          $.toast({
-                heading: '警告',
-                text: respData.message,
-                icon: 'warning'
-            });
+      $.ajax({
+        type : 'get',
+        url : 'user/info',
+        success : function (respData) {
+          if (respData.code == 0) {
+            initUserInfo(respData.data);
+          } else {
+            $.toast({ heading: '警告', text: respData.message, icon: 'warning' });
           }
         },
         error : function () {
-          // 提示信息
-          $.toast({
-              heading: '错误',
-              text: '访问出现问题，请与管理员联系.',
-              icon: 'error'
-          });
+          $.toast({ heading: '错误', text: '访问出现问题，请与管理员联系.', icon: 'error' });
+        }
+      });
+
+      // ================= 绑定文件选择变化事件（只绑定一次） =================
+      $('#settings_input_chooiceAvatar').on('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        // 1. 校验文件类型
+        if (!file.type.startsWith('image/')) {
+          $.toast({ heading: '提示', text: '请选择图片文件（jpg、png、gif 等）', icon: 'warning' });
+          // 清空 input，允许重新选同一文件
+          $(this).val('');
+          return;
         }
 
-    });
+        // 2. 校验文件大小（最大 5MB）
+        if (file.size > 5 * 1024 * 1024) {
+          $.toast({ heading: '提示', text: '图片大小不能超过 5MB', icon: 'warning' });
+          $(this).val('');
+          return;
+        }
 
-  }
+        // 3. ✅ 立即本地预览（FileReader 读取本地文件，无需等待上传）
 
-  // ================= 处理选择头像事件 =================
-  function openFileDialog () {
-    $('#settings_input_chooiceAvatar').click();
+        const reader = new FileReader();
+        let localPreviewUrl = ''; // 在外层声明
+        reader.onload = function(e) {
+          localPreviewUrl = e.target.result; // 保存到外层变量
+          $('#settings_avatar').css('background-image', 'url(' + localPreviewUrl + ')');
+        };
+        reader.readAsDataURL(file);
 
-    $('#settings_input_chooiceAvatar').off('change').on('change', function() {
-      let file = this.files[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) {
-        $.toast({ heading: '提示', text: '请选择图片文件', icon: 'warning' });
+        // 4. 显示上传中的 loading
+        $('#avatar_uploading').show();
+
+        // 5. 构造 FormData 并上传到后端（后端再存入 MinIO）
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // ⚠️ contentType:false 时 $.ajaxSetup 的 beforeSend 不会自动执行，
+        //    必须在这里手动把 Token 放进 headers，否则后端收不到 Authorization。
+        const uploadToken = localStorage.getItem('token');
+
+        $.ajax({
+          url: 'user/updateAvatar',
+          type: 'POST',
+          data: formData,
+          processData: false,   // 必须：不让 jQuery 处理 FormData
+          contentType: false,   // 必须：让浏览器自动设置 multipart boundary
+          headers: {
+            'Authorization': uploadToken ? 'Bearer ' + uploadToken : ''
+          },
+          success: function(res) {
+            // 隐藏 loading
+            $('#avatar_uploading').hide();
+            // 清空 input，方便用户下次还能选同一文件
+            $('#settings_input_chooiceAvatar').val('');
+
+            if (res.code == 0) {
+              const newAvatarUrl = res.data; // MinIO 返回的完整 URL
+
+              // 用 MinIO 真实 URL 替换头像（保证刷新后也正确）
+              $('#settings_avatar').css('background-image', 'url(' + newAvatarUrl + ')');
+
+              // 同步更新首页右上角导航栏头像
+              $('#index_nav_avatar').css('background-image', 'url(' + newAvatarUrl + ')');
+              $.toast({ heading: '成功', text: '头像修改成功！', icon: 'success' });
+
+            } else {
+              // 上传失败：还原为旧头像（重新请求用户信息）
+              $.ajax({
+                type: 'get',
+                url: 'user/info',
+                success: function(userResp) {
+                  if (userResp.code == 0 && userResp.data) {
+                    const oldUrl = (userResp.data.avatarUrl && userResp.data.avatarUrl.startsWith('http'))
+                            ? userResp.data.avatarUrl
+                            : avatarUrl;
+                    $('#settings_avatar').css('background-image', 'url(' + oldUrl + ')');
+                  }
+                }
+              });
+              $.toast({ heading: '警告', text: res.message || '头像上传失败', icon: 'warning' });
+            }
+          },
+          error: function(xhr) {
+            $('#avatar_uploading').hide();
+            $('#settings_input_chooiceAvatar').val('');
+            // 还原旧头像
+            $.ajax({
+              type: 'get',
+              url: 'user/info',
+              success: function(userResp) {
+                if (userResp.code == 0 && userResp.data) {
+                  const oldUrl = (userResp.data.avatarUrl && userResp.data.avatarUrl.startsWith('http'))
+                          ? userResp.data.avatarUrl
+                          : avatarUrl;
+                  $('#settings_avatar').css('background-image', 'url(' + oldUrl + ')');
+                }
+              }
+            });
+            $.toast({ heading: '错误', text: '头像上传失败，请稍后再试', icon: 'error' });
+          }
+        });
+      });
+
+      // ================= 修改用户昵称 =================
+      $('#setting_submit_nickname').click(function(){
+        const nicknameEl = $('#setting_input_nickname');
+        if (!nicknameEl.val()) {
+          nicknameEl.focus();
+          return false;
+        }
+        changeUserInfo({ nickname: nicknameEl.val() });
+      });
+
+      // ================= 修改邮箱 =================
+      $('#setting_submit_email').click(function(){
+        const emailEl = $('#setting_input_email');
+        if (!emailEl.val()) {
+          emailEl.focus();
+          return false;
+        }
+        changeUserInfo({ email: emailEl.val() });
+      });
+
+      // ================= 修改电话 =================
+      $('#setting_submit_phoneNum').click(function(){
+        const phoneNumEl = $('#setting_input_phoneNum');
+        if (!phoneNumEl.val()) {
+          phoneNumEl.focus();
+          return false;
+        }
+        changeUserInfo({ phoneNum: phoneNumEl.val() });
+      });
+
+      // ================= 修改个人介绍 =================
+      $('#settings_submit_remark').click(function(){
+        const remarkEl = $('#settings_textarea_remark');
+        if (!remarkEl.val()) {
+          remarkEl.focus();
+          return false;
+        }
+        changeUserInfo({ remark: remarkEl.val() });
+      });
+
+      // ================= 修改密码 =================
+      $('#settings_submit_password').click(function() {
+        const oldPasswordEl = $('#settings_input_oldPassword');
+        const newPasswordEl = $('#settings_input_newPassword');
+        const passwordRepeatEl = $('#settings_input_passwordRepeat');
+
+        if (!oldPasswordEl.val()) { oldPasswordEl.focus(); return false; }
+        if (!newPasswordEl.val()) { newPasswordEl.focus(); return false; }
+        if (!passwordRepeatEl.val()) { passwordRepeatEl.focus(); return false; }
+
+        if (newPasswordEl.val() != passwordRepeatEl.val()) {
+          $.toast({ heading: '提示', text: '两次输入的密码不相同', icon: 'warning' });
+          passwordRepeatEl.focus();
+          return false;
+        }
+
+        changeUserInfo({
+          oldPassword: oldPasswordEl.val(),
+          newPassword: newPasswordEl.val(),
+          passwordRepeat: passwordRepeatEl.val()
+        }, 2);
+
+        oldPasswordEl.val('');
+        newPasswordEl.val('');
+        passwordRepeatEl.val('');
+      });
+
+    }); // end $(function())
+
+    // ================= 设置用户信息 =================
+    function initUserInfo(user) {
+      // avatarUrl 不是完整 URL 时用默认头像
+      if (!user.avatarUrl || !user.avatarUrl.startsWith('http')) {
+        user.avatarUrl = avatarUrl; // avatarUrl 是 common.js 里定义的全局默认头像变量
+      }
+      $('#settings_user_id').val(user.id);
+      $('#settings_nickname').html(user.nickname);
+      $('#settings_avatar').css('background-image', 'url(' + user.avatarUrl + ')');
+      $('#setting_input_nickname').val(user.nickname);
+      $('#setting_input_email').val(user.email);
+      $('#setting_input_phoneNum').val(user.phoneNum);
+      $('#settings_textarea_remark').html(user.remark);
+    }
+
+    // ================= 触发文件选择对话框 =================
+    function openFileDialog() {
+      // 直接触发隐藏的 input[type=file] 点击，change 事件已在 $(function()) 中统一绑定
+      $('#settings_input_chooiceAvatar').click();
+    }
+
+    // ================= 封装通用 AJAX 修改请求 =================
+    function changeUserInfo(userInfo, type) {
+      if (!userInfo) {
+        $.toast({ heading: '提示', text: '请检查要修改的内容是否正确或联系管理员', icon: 'info' });
         return;
       }
 
-      let formData = new FormData();
-      formData.append("file", file);
+      const userURL = (type == 2) ? 'user/modifyPwd' : 'user/modifyInfo';
 
       $.ajax({
-        url: 'user/updateAvatar',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(res) {
-          if (res.code == 0) {
-            $.toast({ heading: '成功', text: '头像上传成功', icon: 'success' });
-            let newUrl = res.data;
-            // 更新用户中心页面的头像
-            $('#settings_avatar').css('background-image', 'url(' + newUrl + ')');
-            // ✅ 同步更新导航栏头像
-            $('#index_nav_avatar').css('background-image', 'url(' + newUrl + ')');
+        type : 'post',
+        url : userURL,
+        contentType : 'application/x-www-form-urlencoded',
+        data : userInfo,
+        success : function (respData) {
+          if (respData.code == 0) {
+            const user = respData.data;
+            if (user && user.nickname) {
+              $('#settings_nickname').html(user.nickname);
+              $('#index_nav_nickname').html(user.nickname);
+            }
+            if (type == 2) {
+              location.assign('sign-in.html');
+              return;
+            }
+            $.toast({ heading: '成功', text: respData.message, icon: 'success' });
           } else {
-            $.toast({ heading: '警告', text: res.message, icon: 'warning' });
+            $.toast({ heading: '警告', text: respData.message, icon: 'warning' });
           }
         },
-        error: function() {
-          $.toast({ heading: '错误', text: '头像上传失败，请稍后再试', icon: 'error' });
+        error : function () {
+          $.toast({ heading: '错误', text: '访问出现问题，请与管理员联系.', icon: 'error' });
         }
       });
-    });
-  }
+    }
 
-</script>
+  </script>

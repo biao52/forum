@@ -387,4 +387,16 @@ public class UserServiceImpl implements IUserService {
         user.setUpdateTime(new Date());
         userMapper.updateByPrimaryKeySelective(user);
     }
+    @Override
+    public void updateAvatarById(User user) {
+        if (user == null || user.getId() == null || StringUtil.isEmpty(user.getAvatarUrl())) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        int row = userMapper.updateByPrimaryKeySelective(user);
+        if (row != 1) {
+            log.warn(ResultCode.ERROR_SERVICES.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
+        }
+    }
 }
