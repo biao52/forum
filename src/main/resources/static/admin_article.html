@@ -244,7 +244,7 @@
       if (confirm('确定要对该文章的作者进行禁言处理吗？禁言后该用户将无法发帖和回复。')) {
         $.ajax({
           type: 'POST',
-          url: 'user/ban',
+          url: 'user/admin/ban',
           contentType: 'application/x-www-form-urlencoded',
           data: { id: userId, state: 1 },
           success: function(res) {

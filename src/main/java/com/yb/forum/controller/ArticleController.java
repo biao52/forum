@@ -525,8 +525,10 @@ public class ArticleController {
         if (article == null || article.getDeleteState() == 1) {
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
         }
-        // 校验当前登录的用户是不是作者
-        if (user.getId() != article.getUserId()) {
+        // 校验当前登录的用户是不是作者或管理员
+        boolean isOwner = user.getId().equals(article.getUserId());
+        boolean isAdmin = user.getIsAdmin() != null && user.getIsAdmin() == 1;
+        if (!isOwner && !isAdmin) {
             return AppResult.failed(ResultCode.FAILED_FORBIDDEN);
         }
         // 调用Service
