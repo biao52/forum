@@ -9,6 +9,7 @@
       <result column="u_username" property="username"/>
       <result column="u_nickname" property="nickname"/>
       <result column="u_avatarUrl" property="avatarUrl"/>
+      <result column="u_state" property="state"/>
     </association>
 
     <association property="board" javaType="com.yb.forum.model.Board">
@@ -35,6 +36,7 @@
       u.username AS u_username,
       u.nickname AS u_nickname,
       u.avatarUrl AS u_avatarUrl,
+      u.state AS u_state,
       -- 查询版块表字段并起别名
       b.id AS b_id,
       b.name AS b_name
@@ -52,7 +54,7 @@
   <select id="selectAllByBoardId" resultMap="AllInfoResultMap">
     SELECT
     a.*,
-    u.id AS u_id, u.username AS u_username, u.nickname AS u_nickname, u.avatarUrl AS u_avatarUrl,
+    u.id AS u_id, u.username AS u_username, u.nickname AS u_nickname, u.avatarUrl AS u_avatarUrl, u.state AS u_state,
     b.id AS b_id, b.name AS b_name
     FROM
     t_article a
@@ -133,6 +135,7 @@
       u.id as u_id,
       u.avatarUrl as u_avatarUrl,
       u.nickname as u_nickname,
+      u.state as u_state,
       a.id,
       a.boardId,
       a.userId,
@@ -163,6 +166,7 @@
       u.id as u_id,
       u.avatarUrl as u_avatarUrl,
       u.nickname as u_nickname,
+      u.state as u_state,
       a.id,
       a.boardId,
       a.userId,

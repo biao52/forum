@@ -204,7 +204,7 @@
               <td>
                 <div class="btn-list flex-nowrap">
                   <a href="javascript:void(0);" class="btn btn-primary btn-sm admin-btn-edit" data-id="${item.id}">修改</a>
-                  <a href="javascript:void(0);" class="btn btn-warning btn-sm admin-btn-ban" data-uid="${item.userId}">禁用</a>
+                  <a href="javascript:void(0);" class="btn btn-warning btn-sm admin-btn-ban" data-uid="${item.userId}" data-state="${authorState}">${authorState === 1 ? '解禁' : '禁用'}</a>
                   <a href="javascript:void(0);" class="btn btn-danger btn-sm admin-btn-delete ${item.deleteState===1?'disabled':''}" data-id="${item.id}">删除</a>
                 </div>
               </td>
@@ -243,19 +243,18 @@
 
     $('#admin_article_tbody').on('click', '.admin-btn-ban', function() {
       let userId = $(this).data('uid');
-      let banBtn = $(this);
-      if (confirm('确定要对该文章的作者进行禁言处理吗？禁言后该用户将无法发帖和回复。')) {
+      let currentState = $(this).data('state');
+      let newState = currentState == 1 ? 0 : 1;
+      let actionText = newState == 1 ? '禁言' : '解禁';
+      if (confirm(`确定要${actionText}该用户吗？`)) {
         $.ajax({
           type: 'POST',
           url: 'user/admin/ban',
           contentType: 'application/x-www-form-urlencoded',
-          data: { id: userId, state: 1 },
+          data: { id: userId, state: newState },
           success: function(res) {
             if (res.code == 0) {
-              $.toast({ heading: '成功', text: '该用户已被成功禁言', icon: 'success' });
-              // 直接更新当前行的状态列
-              banBtn.closest('tr').find('td:eq(6)').html('<span class="badge bg-danger text-white">已禁言</span>');
-              // 同时刷新列表确保数据一致
+              $.toast({ heading: '成功', text: `该用户已被成功${actionText}`, icon: 'success' });
               loadAdminArticles();
             } else {
               $.toast({ heading: '警告', text: res.message || '操作失败', icon: 'warning' });
