@@ -130,11 +130,13 @@
         html = '<tr><td colspan="8" class="text-center text-muted py-4">没有找到相关的帖子</td></tr>';
       } else {
         pageData.forEach(item => {
+          // 根据作者状态显示文章状态
           let stateBadge = '';
+          let authorState = (item.user && item.user.state !== undefined) ? item.user.state : 0;
           if (item.deleteState === 1) {
             stateBadge = '<span class="badge bg-secondary text-white">已删除</span>';
-          } else if (item.state === 1) {
-            stateBadge = '<span class="badge bg-danger text-white">被封禁</span>';
+          } else if (authorState === 1) {
+            stateBadge = '<span class="badge bg-danger text-white">已禁言</span>';
           } else {
             stateBadge = '<span class="badge bg-success text-white">正常</span>';
           }
@@ -250,6 +252,7 @@
           success: function(res) {
             if (res.code == 0) {
               $.toast({ heading: '成功', text: '该用户已被成功禁言', icon: 'success' });
+              loadAdminArticles();  // 重新加载文章列表，同步更新状态
             } else {
               $.toast({ heading: '警告', text: res.message || '操作失败', icon: 'warning' });
             }
