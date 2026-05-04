@@ -454,6 +454,17 @@ public class UserController {
     @PostMapping("/admin/ban")
     public AppResult banUser(@RequestParam("id") Long id, @RequestParam("state") Byte state) {
         userService.updateUserState(id, state);
+        
+        // 清除用户信息缓存
+        String userCacheKey = USER_INFO_KEY + id;
+        redisTemplate.delete(userCacheKey);
+        
+        // 清除文章列表缓存（因为文章列表中包含了作者的状态信息）
+        java.util.Set<String> articleListKeys = redisTemplate.keys("article:list:*");
+        if (articleListKeys != null && !articleListKeys.isEmpty()) {
+            redisTemplate.delete(articleListKeys);
+        }
+        
         return AppResult.success();
     }
 

@@ -243,6 +243,7 @@
 
     $('#admin_article_tbody').on('click', '.admin-btn-ban', function() {
       let userId = $(this).data('uid');
+      let banBtn = $(this);
       if (confirm('确定要对该文章的作者进行禁言处理吗？禁言后该用户将无法发帖和回复。')) {
         $.ajax({
           type: 'POST',
@@ -252,7 +253,10 @@
           success: function(res) {
             if (res.code == 0) {
               $.toast({ heading: '成功', text: '该用户已被成功禁言', icon: 'success' });
-              loadAdminArticles();  // 重新加载文章列表，同步更新状态
+              // 直接更新当前行的状态列
+              banBtn.closest('tr').find('td:eq(6)').html('<span class="badge bg-danger text-white">已禁言</span>');
+              // 同时刷新列表确保数据一致
+              loadAdminArticles();
             } else {
               $.toast({ heading: '警告', text: res.message || '操作失败', icon: 'warning' });
             }
