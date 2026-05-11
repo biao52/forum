@@ -42,6 +42,13 @@ public class IDifyServiceImpl implements IDifyService {
             // 构建请求 URL
             String url = difyConfig.getBaseUrl() + "/v1/chat-messages";
 
+            // 打印实际使用的配置
+            System.out.println("=== Dify 配置检查 ===");
+            System.out.println("baseUrl: " + difyConfig.getBaseUrl());
+            System.out.println("实际请求 URL: " + url);
+            System.out.println("API Key: " + difyConfig.getApiKey());
+            System.out.println("======================");
+
             // 构建请求头
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + difyConfig.getApiKey());
@@ -51,110 +58,114 @@ public class IDifyServiceImpl implements IDifyService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("inputs", new HashMap<>());
             requestBody.put("query", query);
-            requestBody.put("response_mode", "streaming"); // 使用流式响应模式
+            requestBody.put("response_mode", "streaming"); // Agent Chat App 只支持 streaming 模式
             requestBody.put("user", userId);
-
-            // 添加系统提示词（如果配置了）
-            String systemPrompt = difyConfig.getSystemPrompt();
-            System.out.println("=== 系统提示词配置 ===");
-            System.out.println(systemPrompt);
-            System.out.println("======================");
-            if (systemPrompt != null && !systemPrompt.isEmpty()) {
-                // 将系统提示词添加到查询前面，作为上下文
-                String enhancedQuery = systemPrompt + "\n\n用户问题：" + query;
-                requestBody.put("query", enhancedQuery);
-            }
 
             // 打印请求信息
             System.out.println("=== Dify API 请求开始 ===");
             System.out.println("URL: " + url);
-            System.out.println("API Key: " + difyConfig.getApiKey());
             System.out.println("请求体：" + requestBody);
 
-            // 发送请求（使用流式响应）
+            // 发送请求
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
             ResponseEntity<String> responseEntity = restTemplate.exchange(
                     url, HttpMethod.POST, requestEntity, String.class);
 
             // 记录响应
             System.out.println("响应状态码：" + responseEntity.getStatusCode());
-            System.out.println("Dify API 响应原始数据：" + responseEntity.getBody());
+            System.out.println("响应头：" + responseEntity.getHeaders());
+            System.out.println("响应体长度：" + (responseEntity.getBody() != null ? responseEntity.getBody().length() : 0));
+            System.out.println("响应体内容：" + responseEntity.getBody());
             System.out.println("=== Dify API 请求结束 ===");
 
-            // 解析流式响应
+            // 解析响应
             DifyResponse response = new DifyResponse();
             if (responseEntity.getBody() != null) {
                 try {
-                    // 流式响应可能包含多个 data: 开头的行
                     String responseBody = responseEntity.getBody();
+                    System.out.println("=== 原始响应体 ===");
+                    System.out.println(responseBody);
+                    System.out.println("==================");
+                    
+                    // 流式响应包含多个 data: 开头的行
                     StringBuilder answerBuilder = new StringBuilder();
-                    StringBuilder thinkingBuilder = new StringBuilder();
-                    boolean hasThinking = false;
-
+                    String conversationId = null;
+                    String messageId = null;
+                    
                     // 按行分割
                     String[] lines = responseBody.split("\n");
                     for (String line : lines) {
                         line = line.trim();
-                        // 查找以 "data:" 开头的行
                         if (line.startsWith("data:")) {
                             String jsonData = line.substring(5).trim();
-                            // 跳过 [DONE] 标记
                             if ("[DONE]".equals(jsonData)) {
                                 continue;
                             }
                             try {
-                                // 解析 JSON
                                 com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(jsonData);
-
-                                // 提取思考过程（如果有）
-                                if (jsonNode.has("thought")) {
-                                    String thought = jsonNode.get("thought").asText();
-                                    if (!thought.isEmpty()) {
-                                        thinkingBuilder.append(thought);
-                                        hasThinking = true;
-                                    }
-                                }
-
-                                // 提取最终答案
+                                System.out.println("=== 解析数据块 ===");
+                                System.out.println(jsonNode);
+                                
+                                // 提取答案
                                 if (jsonNode.has("answer")) {
                                     String answerPart = jsonNode.get("answer").asText();
                                     answerBuilder.append(answerPart);
-                                } else if (jsonNode.has("error")) {
+                                    System.out.println("累积答案: " + answerBuilder.toString());
+                                }
+                                
+                                // 提取 conversation_id
+                                if (jsonNode.has("conversation_id")) {
+                                    conversationId = jsonNode.get("conversation_id").asText();
+                                }
+                                
+                                // 提取 message_id
+                                if (jsonNode.has("message_id")) {
+                                    messageId = jsonNode.get("message_id").asText();
+                                }
+                                
+                                // 检查错误
+                                if (jsonNode.has("error")) {
                                     String errorMessage = jsonNode.get("error").asText();
+                                    System.out.println("Dify 返回错误: " + errorMessage);
                                     response.setAnswer("Dify API 错误：" + errorMessage);
                                     response.setMessage(errorMessage);
                                     return response;
                                 }
                             } catch (Exception e) {
-                                System.out.println("解析 JSON 行失败：" + line);
+                                System.out.println("解析 JSON 行失败: " + line);
                             }
                         }
                     }
-
-                    // 如果没有找到 answer 字段，尝试直接解析整个响应
-                    if (answerBuilder.length() == 0) {
-                        try {
-                            com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(responseBody);
-                            if (jsonNode.has("answer")) {
-                                answerBuilder.append(jsonNode.get("answer").asText());
-                            }
-                        } catch (Exception e) {
-                            System.out.println("直接解析响应失败");
-                        }
-                    }
-
-                    // 只返回最终答案，不返回思考过程
+                    
+                    // 设置最终答案
                     String finalAnswer = answerBuilder.toString();
-                    if (finalAnswer.isEmpty() && hasThinking) {
-                        // 如果没有答案但有思考过程，返回思考过程作为答案
-                        finalAnswer = thinkingBuilder.toString();
+                    if (finalAnswer.isEmpty()) {
+                        System.out.println("警告: 未从流式响应中提取到答案");
+                        response.setAnswer("未收到有效回答，请查看控制台日志");
+                    } else {
+                        System.out.println("=== 最终答案 ===");
+                        System.out.println(finalAnswer);
+                        response.setAnswer(finalAnswer);
                     }
-                    response.setAnswer(finalAnswer);
+                    
+                    // 设置 conversation_id 和 message_id
+                    if (conversationId != null) {
+                        response.setConversation_id(conversationId);
+                    }
+                    if (messageId != null) {
+                        response.setMessage_id(messageId);
+                    }
 
                 } catch (Exception e) {
-                    System.out.println("响应解析失败：" + e.getMessage());
-                    response.setAnswer(responseEntity.getBody());
+                    System.out.println("=== 响应解析失败 ===");
+                    System.out.println("异常类型: " + e.getClass().getName());
+                    System.out.println("异常信息: " + e.getMessage());
+                    e.printStackTrace();
+                    response.setAnswer("响应解析失败：" + e.getMessage());
                 }
+            } else {
+                System.out.println("响应体为空");
+                response.setAnswer("Dify 返回空响应");
             }
 
             return response;

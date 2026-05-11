@@ -115,8 +115,13 @@ public class ArticleReplyController {
 
         // 清除该文章的回复列表缓存
         String cacheKey = REPLY_LIST_KEY + articleId;
-        redisTemplate.delete(cacheKey);
-        log.info("清除回复列表缓存: {}", cacheKey);
+        Boolean deleteResult = redisTemplate.delete(cacheKey);
+        log.info("清除回复列表缓存: {}, 删除结果: {}", cacheKey, deleteResult);
+        
+        // 同时清除可能的变体key（带引号的key）
+        String cacheKeyWithQuotes = REPLY_LIST_KEY + "\"" + articleId + "\"";
+        redisTemplate.delete(cacheKeyWithQuotes);
+        log.info("清除回复列表缓存(变体): {}", cacheKeyWithQuotes);
 
         return AppResult.success();
     }
@@ -126,33 +131,34 @@ public class ArticleReplyController {
     public AppResult<List<ArticleReply>> getRepliesByArticleId (
             @ApiParam("帖子Id") @RequestParam("articleId") @NonNull Long articleId) {
 
-        // 构造缓存key
-        String cacheKey = REPLY_LIST_KEY + articleId;
-
-        // 尝试从Redis获取缓存
-        List<ArticleReply> articleReplies = (List<ArticleReply>) redisTemplate.opsForValue().get(cacheKey);
-
-        if (articleReplies != null) {
-            log.info("从Redis缓存获取回复列表，articleId: {}", articleId);
-            return AppResult.success(articleReplies);
-        }
+        log.info("=== 获取回复列表请求开始 ===");
+        log.info("请求参数 articleId: {}", articleId);
 
         // 校验帖子是否存在
         Article article = articleService.selectById(articleId);
         if (article == null || article.getDeleteState() == 1) {
+            log.warn("文章不存在或已删除，articleId: {}", articleId);
+            log.info("=== 获取回复列表请求结束 ===");
             return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
         }
 
-        // 缓存未命中，从数据库查询
-        log.info("从数据库查询回复列表，articleId: {}", articleId);
-        articleReplies = articleReplyService.selectByArticleId(articleId);
+        // 直接从数据库查询（临时禁用缓存进行测试）
+        log.info("🔎 从数据库查询回复列表，articleId: {}", articleId);
+        List<ArticleReply> articleReplies = articleReplyService.selectByArticleId(articleId);
 
         if (articleReplies == null) {
             articleReplies = new java.util.ArrayList<>();
         }
-
-        // 存入Redis缓存
-        redisTemplate.opsForValue().set(cacheKey, articleReplies, CACHE_EXPIRE_TIME, TimeUnit.MINUTES);
+        
+        log.info("数据库查询结果，articleId: {}, 数量: {}", articleId, articleReplies.size());
+        if (!articleReplies.isEmpty()) {
+            for (ArticleReply reply : articleReplies) {
+                log.info("回复记录 - id: {}, content: {}, postUserId: {}, replyId: {}", 
+                    reply.getId(), reply.getContent(), reply.getPostUserId(), reply.getReplyId());
+            }
+        }
+        
+        log.info("=== 获取回复列表请求结束 ===");
 
         return AppResult.success(articleReplies);
     }

@@ -41,17 +41,26 @@ public class ArticleReplyServiceImpl implements IArticleReplyService {
             // 抛出异常
             throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
         }
+        
+        log.info("=== 创建评论开始 ===");
+        log.info("articleId: {}, postUserId: {}, replyId: {}, replyUserId: {}", 
+            articleReply.getArticleId(), articleReply.getPostUserId(), 
+            articleReply.getReplyId(), articleReply.getReplyUserId());
+        
         // 设置默认值
-        articleReply.setReplyId(null);
-        articleReply.setReplyUserId(null);
         articleReply.setLikeCount(0);
         articleReply.setState((byte) 0);
         articleReply.setDeleteState((byte) 0);
         Date date = new Date();
         articleReply.setCreateTime(date);
         articleReply.setUpdateTime(date);
+        
+        log.info("准备插入评论: {}", articleReply);
+        
         // 写入数据库
         int row = articleReplyMapper.insertSelective(articleReply);
+        log.info("插入结果: row = {}, 生成的id = {}", row, articleReply.getId());
+        
         if (row != 1) {
             // 打印日志
             log.warn(ResultCode.ERROR_SERVICES.toString());
@@ -63,7 +72,8 @@ public class ArticleReplyServiceImpl implements IArticleReplyService {
         articleService.addOneReplyCountById(articleReply.getArticleId());
         // 打印日志
         log.info("回复成功, article id = " + articleReply.getArticleId() + ", user id = " +
-                articleReply.getPostUserId());
+                articleReply.getPostUserId() + ", reply id = " + articleReply.getId());
+        log.info("=== 创建评论结束 ===");
 
     }
 

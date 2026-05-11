@@ -363,6 +363,8 @@
           $('#bit-forum-content').load('profile.html');
         });
 
+      // 加载回复列表
+      loadArticleDetailsReply();
     }
 
     // ====================== 加载回复列表 ======================
@@ -508,7 +510,7 @@
         
         // 检查是否显示删除按钮（评论作者或帖子作者）
         let replyActions = replyItem.find('.reply-actions');
-        if (articleReply.user.id == currentUserId || article.userId == currentUserId) {
+        if (articleReply.user.id == currentUserId || currentArticle.userId == currentUserId) {
           replyActions.show();
         }
         
@@ -558,7 +560,7 @@
     }
 
     // ====================== 加载回复 ======================
-    loadArticleDetailsReply();
+    // 已移至 initArticleDetails() 中调用，确保 currentArticle.id 有值后再加载
 
 
     // ====================== 处理点赞 ======================
@@ -655,6 +657,7 @@
     $('#details_btn_article_reply').click(function () {
       let articleIdEl = $('#details_article_id');
       let replyContentEl = $('#details_article_reply_content');
+      let replyToIdEl = $('#reply_to_id');
       // 非空校验
       if (!replyContentEl.val()) {
         // 提示
@@ -666,11 +669,16 @@
         return;
       }
 
-      // 构造帖子对象
+      // 构造请求参数
       let postData = {
         articleId : articleIdEl.val(),
         content : replyContentEl.val()
       };
+      
+      // 如果有回复的评论ID，添加到请求参数中
+      if (replyToIdEl.val()) {
+        postData.replyId = replyToIdEl.val();
+      }
       
       // 发送请求，成功后 
       // 1. 清空回复区域
@@ -690,6 +698,13 @@
               icon: 'success' // 绿色
             });
 
+            // 清空回复内容
+            replyContentEl.val('');
+            // 清空回复提示
+            $('#reply_to_user').text('');
+            $('#reply_to_user').hide();
+            replyToIdEl.val('');
+            
             // 更新全局变量中的值
             currentArticle.replyCount = currentArticle.replyCount + 1; 
             // 更新页面上的回复数量
@@ -709,7 +724,7 @@
           // 提示信息
           $.toast({
               heading: '警告',
-              text: respData.message,
+              text: '回复失败，请与管理员联系.',
               icon: 'error'  // 红色
           });
         }
