@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.yb.forum.utils.MinioUtil;
 import org.springframework.web.multipart.MultipartFile;
@@ -470,8 +471,73 @@ public class UserController {
 
     @ApiOperation("管理员-删除用户")
     @PostMapping("/admin/delete")
-    public AppResult deleteUser(@RequestParam("id") Long id) {
+    public ResponseEntity<AppResult> deleteUser(@RequestParam(value = "id", required = false) String idStr,
+                                                 HttpServletRequest request) {
+        // 1. 鉴权：提取并验证 JWT
+        Long currentUserId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                currentUserId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                log.warn("JWT 解析失败");
+            }
+        }
+        if (currentUserId == null) {
+            return ResponseEntity.status(401)
+                    .body(AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录"));
+        }
+
+        // 2. 管理员检查
+        User currentUser = userService.selectById(currentUserId);
+        if (currentUser == null || currentUser.getIsAdmin() == null || currentUser.getIsAdmin() != 1) {
+            return ResponseEntity.status(403)
+                    .body(AppResult.failed(ResultCode.FAILED_FORBIDDEN, "无管理员权限"));
+        }
+
+        // 3. 参数校验：null 检查
+        if (idStr == null) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "用户ID不能为空"));
+        }
+        // 4. 参数校验：空字符串检查
+        if (idStr.trim().isEmpty()) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "用户ID不能为空"));
+        }
+        // 5. 参数校验：格式和范围校验（仅允许正整数字符串，排除负数、0、浮点数、字符串、注入攻击）
+        if (!idStr.trim().matches("^[1-9]\\d{0,18}$")) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "用户ID格式错误"));
+        }
+        Long id;
+        try {
+            id = Long.parseLong(idStr.trim());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "用户ID格式错误"));
+        }
+
+        // 6. 存在性检查
+        if (!userService.isUserExists(id)) {
+            return ResponseEntity.status(404)
+                    .body(AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS));
+        }
+
+        // 7. 执行删除
         userService.deleteUser(id);
-        return AppResult.success();
+
+        // 8. 清除缓存
+        String userCacheKey = USER_INFO_KEY + id;
+        redisTemplate.delete(userCacheKey);
+        java.util.Set<String> articleListKeys = redisTemplate.keys("article:list:*");
+        if (articleListKeys != null && !articleListKeys.isEmpty()) {
+            redisTemplate.delete(articleListKeys);
+        }
+        String userArticleKey = "article:user:" + id;
+        redisTemplate.delete(userArticleKey);
+
+        return ResponseEntity.ok(AppResult.success());
     }
 }

@@ -78,6 +78,8 @@ public interface IUserService {
     void updateUserState(Long id, Byte state);
 
     void deleteUser(Long id);
+
+    boolean isUserExists(Long id);
     /**
      * 更新用户头像
      * @param user 包含 id 和 avatarUrl 的用户对象

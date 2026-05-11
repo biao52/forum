@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiParam;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -491,9 +492,9 @@ public class ArticleController {
 
     @ApiOperation("删除帖子")
     @PostMapping("/delete")
-    public AppResult deleteById (HttpServletRequest request,
-                                 @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id) {
-        // 从 JWT 令牌中获取用户 ID
+    public ResponseEntity<AppResult> deleteById(HttpServletRequest request,
+                                 @ApiParam("帖子Id") @RequestParam(value = "id", required = false) String idStr) {
+        // 1. 鉴权：提取并验证 JWT
         Long userId = null;
         String token = request.getHeader("Authorization");
         if (token != null && token.startsWith("Bearer ")) {
@@ -501,46 +502,73 @@ public class ArticleController {
             try {
                 userId = JwtUtil.getUserIdFromToken(token);
             } catch (Exception e) {
-                // JWT 解析失败
+                log.warn("JWT 解析失败");
             }
         }
-        
-        // 如果没有用户 ID，返回错误
         if (userId == null) {
-            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+            return ResponseEntity.status(401)
+                    .body(AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录"));
         }
-        
-        // 查询用户信息
+
+        // 2. 查询用户信息
         User user = userService.selectById(userId);
         if (user == null) {
-            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+            return ResponseEntity.status(401)
+                    .body(AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在"));
         }
-        
         if (user.getState() == 1) {
-            return AppResult.failed(ResultCode.FAILED_USER_BANNED);
+            return ResponseEntity.status(403)
+                    .body(AppResult.failed(ResultCode.FAILED_USER_BANNED));
         }
-        // 查询帖子详情
+
+        // 3. 参数校验：null 检查
+        if (idStr == null) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "文章ID不能为空"));
+        }
+        // 4. 参数校验：空字符串检查
+        if (idStr.trim().isEmpty()) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "文章ID不能为空"));
+        }
+        // 5. 参数校验：格式和范围校验（仅允许正整数字符串，排除负数、0、浮点数、字符串、注入攻击）
+        if (!idStr.trim().matches("^[1-9]\\d{0,18}$")) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "文章ID格式错误"));
+        }
+        Long id;
+        try {
+            id = Long.parseLong(idStr.trim());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400)
+                    .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "文章ID格式错误"));
+        }
+
+        // 6. 查询帖子详情
         Article article = articleService.selectById(id);
-        // 校验帖子状态
         if (article == null || article.getDeleteState() == 1) {
-            return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
+            return ResponseEntity.status(404)
+                    .body(AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS));
         }
-        // 校验当前登录的用户是不是作者或管理员
+
+        // 7. 校验当前登录的用户是不是作者或管理员
         boolean isOwner = user.getId().equals(article.getUserId());
         boolean isAdmin = user.getIsAdmin() != null && user.getIsAdmin() == 1;
         if (!isOwner && !isAdmin) {
-            return AppResult.failed(ResultCode.FAILED_FORBIDDEN);
+            return ResponseEntity.status(403)
+                    .body(AppResult.failed(ResultCode.FAILED_FORBIDDEN));
         }
-        // 调用Service
+
+        // 8. 执行删除
         articleService.deleteById(id);
 
-        // 清除相关缓存
+        // 9. 清除相关缓存
         clearArticleDetailCache(id);
         clearArticleListCache(article.getBoardId());
         clearArticleListCache(null);
         clearArticleUserCache(article.getUserId());
 
-        return AppResult.success();
+        return ResponseEntity.ok(AppResult.success());
     }
 
     @ApiOperation("获取用户的帖子列表")

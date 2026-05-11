@@ -381,11 +381,24 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public void deleteUser(Long id) {
+        if (!isUserExists(id)) {
+            log.warn(ResultCode.FAILED_USER_NOT_EXISTS.toString() + ", id = " + id);
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS));
+        }
         User user = new User();
         user.setId(id);
         user.setDeleteState((byte) 1);
         user.setUpdateTime(new Date());
         userMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    public boolean isUserExists(Long id) {
+        if (id == null || id <= 0) {
+            return false;
+        }
+        User user = userMapper.selectByPrimaryKey(id);
+        return user != null && user.getDeleteState() != null && user.getDeleteState() == 0;
     }
     @Override
     public void updateAvatarById(User user) {
