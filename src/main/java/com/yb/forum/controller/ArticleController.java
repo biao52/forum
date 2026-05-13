@@ -137,7 +137,7 @@ public class ArticleController {
         if (lastPublishTime != null) {
             long lastTime = Long.parseLong(lastPublishTime);
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastTime < 60000) { // 60秒内只能发布一次
+            if (currentTime - lastTime < 3000) { // 3秒内只能发布一次
                 return AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "发布频率过高，请稍后再试");
             }
         }
