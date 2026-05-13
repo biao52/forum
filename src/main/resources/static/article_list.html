@@ -289,10 +289,9 @@
       let avatarUrl = 'image/avatar01.jpeg';
       // 遍历结果
       data.forEach(article => {
-        // 防御：后端必须返回 user 信息
+        // 用户信息兜底：作者被删除时 user 可能为 null
         if (!article.user) {
-          console.warn('文章缺少用户信息：', article);
-          return;
+          article.user = { nickname: '已注销用户', avatarUrl: '' };
         }
         // 设置默认头像
         let finalAvatarUrl = avatarUrl;

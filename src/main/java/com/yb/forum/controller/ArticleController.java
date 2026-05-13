@@ -182,11 +182,42 @@ public class ArticleController {
 
     @ApiOperation("获取帖子列表")
     @GetMapping("/getAllByBoardId")
-    public AppResult<List<Article>> getAllByBoardId(
-            @ApiParam("版块Id") @RequestParam(value = "boardId", required = false) Long boardId,
+    public ResponseEntity<AppResult<List<Article>>> getAllByBoardId(
+            @ApiParam("版块Id") @RequestParam(value = "boardId", required = false) String boardIdStr,
             @ApiParam("搜索关键字") @RequestParam(value = "keyword", required = false) String keyword) {
 
-        // 🔑 构造缓存 Key（区分普通查询和关键字搜索）
+        // 1. 参数校验：boardId 格式
+        Long boardId = null;
+        if (boardIdStr != null && !boardIdStr.trim().isEmpty()) {
+            if ("null".equalsIgnoreCase(boardIdStr.trim())) {
+                return ResponseEntity.status(400)
+                        .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "版块ID不能为null"));
+            }
+            if (!boardIdStr.trim().matches("^[1-9]\\d{0,18}$")) {
+                return ResponseEntity.status(400)
+                        .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "版块ID格式错误"));
+            }
+            try {
+                boardId = Long.parseLong(boardIdStr.trim());
+            } catch (NumberFormatException e) {
+                return ResponseEntity.status(400)
+                        .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "版块ID格式错误"));
+            }
+            if (boardService.selectById(boardId) == null) {
+                return ResponseEntity.ok(AppResult.success(new ArrayList<>()));
+            }
+        }
+
+        // 2. 参数校验：keyword 数组/对象格式拒绝
+        if (keyword != null && !keyword.isEmpty()) {
+            String trimmed = keyword.trim();
+            if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+                return ResponseEntity.status(400)
+                        .body(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE, "关键字格式错误"));
+            }
+        }
+
+        // 3. 构造缓存 Key（区分普通查询和关键字搜索）
         String cacheKey;
         if (StringUtil.isEmpty(keyword)) {
             // 普通查询：按 boardId 缓存
@@ -204,8 +235,8 @@ public class ArticleController {
         List<Article> articles = (List<Article>) redisTemplate.opsForValue().get(cacheKey);
 
         if (articles != null) {
-            log.info("✅ 从 Redis 缓存获取文章列表，cacheKey: {}", cacheKey);
-            return AppResult.success(articles);
+            log.info("从 Redis 缓存获取文章列表，cacheKey: {}", cacheKey);
+            return ResponseEntity.ok(AppResult.success(articles));
         }
 
         // 🗄️ 缓存未命中，从数据库查询
@@ -234,9 +265,9 @@ public class ArticleController {
         // 💾 存入 Redis 缓存（搜索结果的缓存时间可以短一些）
         long expireTime = StringUtil.isEmpty(keyword) ? CACHE_EXPIRE_TIME : 10; // 搜索缓存10分钟
         redisTemplate.opsForValue().set(cacheKey, articles, expireTime, TimeUnit.MINUTES);
-        log.info("💾 缓存已更新，cacheKey: {}, expire: {}min", cacheKey, expireTime);
+        log.info("缓存已更新，cacheKey: {}, expire: {}min", cacheKey, expireTime);
 
-        return AppResult.success(articles);
+        return ResponseEntity.ok(AppResult.success(articles));
     }
 
     @ApiOperation("根据帖子Id获取详情")
@@ -622,7 +653,7 @@ public class ArticleController {
      * 清除文章列表缓存
      */
     private void clearArticleListCache(Long boardId) {
-        String key = boardId == null ? ARTICLE_LIST_KEY + "all" : ARTICLE_LIST_KEY + boardId;
+        String key = boardId == null ? ARTICLE_LIST_KEY + "all" : ARTICLE_LIST_KEY + "board:" + boardId;
         redisTemplate.delete(key);
         log.info("清除文章列表缓存: {}", key);
     }
