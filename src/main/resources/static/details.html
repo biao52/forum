@@ -174,6 +174,14 @@
             </div>
           </div>
           <div class="card-footer bg-transparent mt-auto">
+            <!-- 回复提示区 -->
+            <div class="row mb-2" id="reply_to_hint" style="display:none;">
+              <div class="col">
+                <span id="reply_to_user" style="color:#0d6efd; font-size:14px;"></span>
+                <a href="javascript:void(0);" id="reply_to_cancel" style="margin-left:8px; color:#999; font-size:12px;">取消回复</a>
+              </div>
+            </div>
+            <input type="hidden" id="reply_to_id">
             <!-- 操作区 结束 -->
             <div class="col-auto row g-2 justify-content-end">
               <div class="col-auto">
@@ -400,165 +408,123 @@
     // 
     function buildArticleReply(data) {
       let replyArea = $('#details_reply_area');
-      // 没有回复内容
       if (!data || data.length == 0) {
         replyArea.html('<p>还没有回复，第一个写下回复吧</p>');
         return;
       }
-      // 清空原有内空
       $('#details_reply_area').html('');
-      data.forEach(articleReply => {
-        // 默认头像路径
-      if (!articleReply.user.avatarUrl) {
-        articleReply.user.avatarUrl = avatarUrl;
-      }
-        // 构造回复记录
-        let replyHtml = '<div class="row" >'
-          + ' <div class="col-3 card">'
-          + ' <div class="card-body p-4 text-center">'
-          + ' <span class="avatar avatar-xl mb-3 rounded" style="background-image: url(' + articleReply.user.avatarUrl + ')"></span>'
-          + ' <h3 class="m-0 mb-1"><a href="javascript:void(0);" class="a_reply_user_profile">' + articleReply.user.nickname + '</a></h3>'
-          + ' <div class="div_reply_send_message" style="margin-top: 10px;">'
-          + ' <a href="javascript:void(0);" class="btn btn-primary btn-reply" data-id="' + articleReply.id + '" data-nickname="' + articleReply.user.nickname + '">'
-          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-message-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">'
-          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>'
-          + ' <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1"></path>'
-          + ' <path d="M12 12l0 .01"></path>'
-          + ' <path d="M8 12l0 .01"></path>'
-          + ' <path d="M16 12l0 .01"></path>'
-          + ' </svg>'
-          + ' 回复'
-          + ' </a>'
-          + ' <a href="javascript:void(0);" class="btn btn-primary btn_reply_send_message" data-bs-toggle="modal" data-bs-target="#index_message_modal">'
-          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mail" width="24" height="24"'
-          + ' viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"' 
-          + ' stroke-linejoin="round">'
-          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>'
-          + ' <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z">'
-          + ' </path>'
-          + ' <path d="M3 7l9 6l9 -6"></path>'
-          + ' </svg>'
-          + ' 发私信'
-          + ' </a>'
+
+      // 分离顶级回复和子回复（楼中楼）
+      let topReplies = [];
+      let childReplies = {};
+      data.forEach(function(r) {
+        if (!r.replyId) {
+          topReplies.push(r);
+        } else {
+          if (!childReplies[r.replyId]) {
+            childReplies[r.replyId] = [];
+          }
+          childReplies[r.replyId].push(r);
+        }
+      });
+
+      // 构建单条回复
+      function buildOneReply(articleReply, isNested) {
+        let ava = avatarUrl;
+        if (articleReply.user && articleReply.user.avatarUrl && articleReply.user.avatarUrl.startsWith('http')) {
+          ava = articleReply.user.avatarUrl;
+        }
+        let authorName = articleReply.user ? (articleReply.user.nickname || articleReply.user.username || '已注销用户') : '已注销用户';
+        let authorId = articleReply.user ? articleReply.user.id : 0;
+        let replyToName = '';
+        if (articleReply.replyUser) {
+          replyToName = articleReply.replyUser.nickname || articleReply.replyUser.username || '已注销用户';
+        }
+
+        let replyMargin = isNested ? 'margin-left: 48px;' : '';
+        let replyBorder = isNested ? 'border-left: 3px solid #e0e0e0;' : '';
+
+        let replyHtml = '<div class="reply-item" style="' + replyMargin + replyBorder + ' padding: 8px 12px; margin-bottom: 4px;">'
+          + ' <div style="display:flex; align-items:flex-start;">'
+          + ' <div style="flex-shrink:0; margin-right:12px; text-align:center; width:48px;">'
+          + ' <span class="avatar rounded" style="background-image: url(' + ava + '); width:36px; height:36px; display:inline-block;"></span>'
           + ' </div>'
+          + ' <div style="flex:1; min-width:0;">'
+          + ' <div style="margin-bottom:4px;">'
+          + ' <a href="javascript:void(0);" class="a_reply_user_profile" style="font-weight:600; color:#333; text-decoration:none; font-size:13px;">' + authorName + '</a>'
+          + (replyToName ? ' <span style="color:#999; font-size:12px;">回复</span> <span style="color:#0d6efd; font-size:12px;">@' + replyToName + '</span>' : '')
           + ' </div>'
+          + ' <div id="details_article_reply_content_' + articleReply.id + '" style="font-size:14px; line-height:1.6; margin-bottom:6px;"></div>'
+          + ' <div style="display:flex; align-items:center; font-size:12px; color:#999;">'
+          + ' <span>' + (articleReply.createTime || '') + '</span>'
+          + ' <a href="javascript:void(0);" class="btn-reply" data-id="' + articleReply.id + '" data-nickname="' + authorName + '" style="margin-left:12px; color:#0d6efd; text-decoration:none; font-size:12px;">'
+          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-message-circle" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1"/><path d="M12 12l0 .01"/><path d="M8 12l0 .01"/><path d="M16 12l0 .01"/></svg>'
+          + ' 回复</a>'
+          + (articleReply.user && articleReply.user.id != currentUserId
+            ? ' <a href="javascript:void(0);" class="btn_reply_send_message" data-uid="' + authorId + '" data-uname="' + authorName + '" style="margin-left:8px; color:#0d6efd; text-decoration:none; font-size:12px;">发私信</a>'
+            : '')
+          + ' <span class="reply-actions" style="display:none; margin-left:8px;">'
+          + ' <a href="javascript:void(0);" class="reply-delete" data-id="' + articleReply.id + '" style="color:#dc3545; text-decoration:none; font-size:12px;">删除</a>'
+          + ' </span>'
           + ' </div>'
-          + ' <div class="col-9 card card-lg">'
-          + ' <div class="card-body">'
-          + ' <div id="details_article_reply_content_' + articleReply.id + '"></div>'
-          + ' </div>'
-          + ' <div class="card-footer bg-transparent mt-auto"' 
-          + ' style="display: flex; justify-content: space-between; align-items: center;">' 
-          + ' <div class="row">' 
-          + ' <div class="col-auto d-none d-md-inline">' 
-          + ' <ul class="list-inline list-inline-dots mb-0">' 
-          + ' <li class="list-inline-item">' 
-          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock-edit" width="24"' 
-          + ' height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"' 
-          + ' stroke-linecap="round" stroke-linejoin="round">' 
-          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>' 
-          + ' <path d="M21 12a9 9 0 1 0 -9.972 8.948c.32 .034 .644 .052 .972 .052"></path>' 
-          + ' <path d="M12 7v5l2 2"></path>' 
-          + ' <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z"></path>' 
-          + ' </svg> ' 
-          + articleReply.createTime 
-          + ' </li>' 
-          + ' </ul>' 
-          + ' </div>' 
-          + ' </div>' 
-          + ' <div class="col-auto reply-actions" style="display: none;">' 
-          + ' <a href="javascript:void(0);" class="btn btn-outline-danger btn-sm reply-delete" data-id="' + articleReply.id + '">' 
-          + ' <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">' 
-          + ' <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>' 
-          + ' <path d="M4 7l16 0"></path>' 
-          + ' <path d="M10 11l0 6"></path>' 
-          + ' <path d="M14 11l0 6"></path>' 
-          + ' <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>' 
-          + ' <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>' 
-          + ' </svg>' 
-          + ' 删除' 
-          + ' </a>' 
-          + ' </div>' 
+          + ' <div class="child-replies" data-parent-id="' + articleReply.id + '" style="margin-top:4px;"></div>'
           + ' </div>'
           + ' </div>'
           + ' </div>';
 
-        
         let replyItem = $(replyHtml);
-        // 获取标题的 a 标签
-        let replySendMessageDiv = replyItem.find('.div_reply_send_message');
-        // 是否显示站内信按钮
-        if (articleReply.user.id == currentUserId) {
-          replySendMessageDiv.css('display', 'none');
-        } else {
-          console.log('显示回复中的站内信');
-          // 设置站内信目标用户信息
-          let replySendMessageBtn = replyItem.find('.btn_reply_send_message');
-          console.log(replySendMessageBtn);
-          replySendMessageBtn.click(function() {
-            console.log(articleReply);
-            setMessageReceiveUserInfo(articleReply.user.id, articleReply.user.nickname);
-        });
-        }
-        // 个人帖子列表
-        let replyUserProfileBtn = replyItem.find('.a_reply_user_profile');
-        replyUserProfileBtn.click(function () {
-          // 设置要查看用户的Id
-          profileUserId = articleReply.user.id;
+
+        replyItem.find('.a_reply_user_profile').click(function() {
+          profileUserId = articleReply.user ? articleReply.user.id : 0;
           $('#bit-forum-content').load('profile.html');
         });
-        
-        // 检查是否显示删除按钮（评论作者或帖子作者）
-        let replyActions = replyItem.find('.reply-actions');
-        if (articleReply.user.id == currentUserId || currentArticle.userId == currentUserId) {
-          replyActions.show();
+
+        replyItem.find('.btn_reply_send_message').click(function() {
+          let uid = $(this).data('uid');
+          let uname = $(this).data('uname');
+          setMessageReceiveUserInfo(uid, uname);
+          $('#index_message_modal').modal('show');
+        });
+
+        let delBtn = replyItem.find('.reply-delete');
+        if (articleReply.user && (articleReply.user.id == currentUserId || currentArticle.userId == currentUserId)) {
+          delBtn.closest('.reply-actions').show();
         }
-        
-        // 绑定评论删除事件
-        let deleteBtn = replyItem.find('.reply-delete');
-        deleteBtn.click(function () {
-          let replyId = $(this).data('id');
-          // 存储当前要删除的评论 ID 到模态框
-          $('#reply_delete_btn').data('reply-id', replyId);
-          // 显示模态框
+        delBtn.click(function() {
+          $('#reply_delete_btn').data('reply-id', $(this).data('id'));
           $('#reply_delete_modal').modal('show');
         });
-        
-        // 绑定回复评论按钮事件
-        let replyBtn = replyItem.find('.btn-reply');
-        replyBtn.click(function () {
-          let replyId = $(this).data('id');
-          let nickname = $(this).data('nickname');
-          // 设置回复的评论 ID
-          $('#reply_to_id').val(replyId);
-          // 显示回复提示
-          $('#reply_to_user').text('回复 @' + nickname);
-          $('#reply_to_user').show();
-          // 滚动到回复框
-          $('html, body').animate({scrollTop: $('#details_article_reply').offset().top - 100}, 300);
-          // 聚焦到回复框
+
+        replyItem.find('.btn-reply').click(function() {
+          $('#reply_to_id').val($(this).data('id'));
+          $('#reply_to_user').text('回复 @' + $(this).data('nickname'));
+          $('#reply_to_hint').show();
+          $('html, body').animate({scrollTop: $('#article_details_reply').offset().top - 100}, 300);
           editor.focus();
         });
-        
-        // 添加到回复区
-        replyArea.append(replyItem);
-        
-        // 处理内容
-        editormd.markdownToHTML('details_article_reply_content_' + articleReply.id, { markdown: articleReply.content });
-        
-        // 如果是回复评论，显示"回复 @某人"
-        if (articleReply.replyId != null && articleReply.replyUserId != null) {
-          // 需要获取被回复用户的信息
-          // 这里通过 articleReply 对象中的信息来判断
-          // 由于当前查询没有包含被回复用户的信息，我们需要在前端做特殊处理
-          // 简化处理：在 content 前面添加"回复 @xxx"
-          let contentDiv = replyItem.find('#details_article_reply_content_' + articleReply.id);
-          let originalHtml = contentDiv.html();
-          contentDiv.html('<span style="color: #999; font-size: 12px;">回复 @用户' + articleReply.replyUserId + '：</span>' + originalHtml);
+
+        return replyItem;
+      }
+
+      // 递归渲染回复及子回复
+      function renderReplyWithChildren(reply, container, isNested) {
+        let item = buildOneReply(reply, isNested);
+        container.append(item);
+        editormd.markdownToHTML('details_article_reply_content_' + reply.id, { markdown: reply.content || '' });
+
+        let children = childReplies[reply.id];
+        if (children && children.length > 0) {
+          let childContainer = item.find('.child-replies');
+          children.forEach(function(child) {
+            renderReplyWithChildren(child, childContainer, true);
+          });
         }
+      }
+
+      topReplies.forEach(function(articleReply) {
+        renderReplyWithChildren(articleReply, replyArea, false);
       });
     }
-
     // ====================== 加载回复 ======================
     // 已移至 initArticleDetails() 中调用，确保 currentArticle.id 有值后再加载
 
@@ -700,9 +666,10 @@
 
             // 清空回复内容
             replyContentEl.val('');
+            editor.setMarkdown('');
             // 清空回复提示
             $('#reply_to_user').text('');
-            $('#reply_to_user').hide();
+            $('#reply_to_hint').hide();
             replyToIdEl.val('');
             
             // 更新全局变量中的值
@@ -730,6 +697,13 @@
         }
 
       });
+    });
+
+    // ====================== 取消回复 ======================
+    $('#reply_to_cancel').click(function () {
+      $('#reply_to_id').val('');
+      $('#reply_to_user').text('');
+      $('#reply_to_hint').hide();
     });
 
     // ====================== 处理删除事件 ======================
