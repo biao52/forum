@@ -417,6 +417,99 @@ public class ArticleController {
         return AppResult.success();
     }
 
+    @ApiOperation("管理员-修改帖子")
+    @PostMapping("/admin/modify")
+    public AppResult adminModify(HttpServletRequest request,
+                                 @ApiParam("帖子Id") @RequestParam("id") @NonNull Long id,
+                                 @ApiParam("帖子标题") @RequestParam("title") @NonNull String title,
+                                 @ApiParam("帖子正文") @RequestParam("content") @NonNull String content) {
+        // 1. 鉴权：提取并验证 JWT
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                log.warn("JWT 解析失败");
+            }
+        }
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+
+        // 2. 管理员检查
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        if (user.getIsAdmin() == null || user.getIsAdmin() != 1) {
+            return AppResult.failed(ResultCode.FAILED_FORBIDDEN, "无管理员权限");
+        }
+
+        // 3. 校验帖子是否存在
+        Article article = articleService.selectById(id);
+        if (article == null || article.getDeleteState() == 1) {
+            return AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS);
+        }
+
+        // 4. 执行修改
+        articleService.modify(id, title, content);
+
+        // 5. 清除缓存
+        clearArticleDetailCache(id);
+        clearArticleListCache(article.getBoardId());
+        clearArticleListCache(null);
+
+        log.info("管理员修改帖子成功. Article id = " + id + ", Admin id = " + userId + ".");
+        return AppResult.success();
+    }
+
+    @ApiOperation("管理员-禁用/解禁文章")
+    @PostMapping("/admin/updateState")
+    public AppResult adminUpdateArticleState(HttpServletRequest request,
+                                             @ApiParam("文章Id") @RequestParam("id") @NonNull Long id,
+                                             @ApiParam("状态") @RequestParam("state") @NonNull Byte state) {
+        // 1. 鉴权
+        Long userId = null;
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userId = JwtUtil.getUserIdFromToken(token);
+            } catch (Exception e) {
+                log.warn("JWT 解析失败");
+            }
+        }
+        if (userId == null) {
+            return AppResult.failed(ResultCode.FAILED_UNAUTHORIZED, "请先登录");
+        }
+
+        // 2. 管理员检查
+        User user = userService.selectById(userId);
+        if (user == null) {
+            return AppResult.failed(ResultCode.FAILED_USER_NOT_EXISTS, "用户不存在");
+        }
+        if (user.getIsAdmin() == null || user.getIsAdmin() != 1) {
+            return AppResult.failed(ResultCode.FAILED_FORBIDDEN, "无管理员权限");
+        }
+
+        // 3. 执行状态更新
+        articleService.updateState(id, state);
+
+        // 4. 清除缓存
+        Article article = articleService.selectById(id);
+        if (article != null) {
+            clearArticleDetailCache(id);
+            clearArticleListCache(article.getBoardId());
+            clearArticleListCache(null);
+        }
+
+        String action = state == 1 ? "禁用" : "解禁";
+        log.info("管理员" + action + "文章成功. Article id = " + id + ", Admin id = " + userId + ".");
+        return AppResult.success();
+    }
+
     @ApiOperation("点赞")
     @PostMapping("/thumbsUp")
     public AppResult thumbsUp (HttpServletRequest request,

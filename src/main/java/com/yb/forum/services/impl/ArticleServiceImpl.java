@@ -474,4 +474,27 @@ public class ArticleServiceImpl implements IArticleService {
         return articles;
     }
 
+    @Override
+    public void updateState(Long id, Byte state) {
+        if (id == null || id <= 0) {
+            log.warn(ResultCode.FAILED_PARAMS_VALIDATE.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_PARAMS_VALIDATE));
+        }
+        Article article = articleMapper.selectByPrimaryKey(id);
+        if (article == null || article.getDeleteState() == 1) {
+            log.warn(ResultCode.FAILED_ARTICLE_NOT_EXISTS.toString() + ", article id = " + id);
+            throw new ApplicationException(AppResult.failed(ResultCode.FAILED_ARTICLE_NOT_EXISTS));
+        }
+        Article updateArticle = new Article();
+        updateArticle.setId(id);
+        updateArticle.setState(state);
+        updateArticle.setUpdateTime(new Date());
+        int row = articleMapper.updateByPrimaryKeySelective(updateArticle);
+        if (row != 1) {
+            log.warn(ResultCode.ERROR_SERVICES.toString());
+            throw new ApplicationException(AppResult.failed(ResultCode.ERROR_SERVICES));
+        }
+        log.info("文章状态更新成功, article id = " + id + ", state = " + state);
+    }
+
 }

@@ -110,4 +110,11 @@ public interface IArticleService {
      */
     void addOneVisitCountById (Long id);
 
+    /**
+     * 更新文章状态（禁用/解禁）
+     * @param id 帖子Id
+     * @param state 状态值（0=正常，1=禁用）
+     */
+    void updateState(Long id, Byte state);
+
 }

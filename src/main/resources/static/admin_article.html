@@ -130,13 +130,13 @@
         html = '<tr><td colspan="8" class="text-center text-muted py-4">没有找到相关的帖子</td></tr>';
       } else {
         pageData.forEach(item => {
-          // 根据作者状态显示文章状态
+          // 根据文章状态显示状态标签
           let stateBadge = '';
-          let authorState = (item.user && item.user.state !== undefined) ? item.user.state : 0;
+          let articleState = (item.state !== undefined && item.state !== null) ? item.state : 0;
           if (item.deleteState === 1) {
             stateBadge = '<span class="badge bg-secondary text-white">已删除</span>';
-          } else if (authorState === 1) {
-            stateBadge = '<span class="badge bg-danger text-white">已禁言</span>';
+          } else if (articleState == 1) {
+            stateBadge = '<span class="badge bg-warning text-white">已禁用</span>';
           } else {
             stateBadge = '<span class="badge bg-success text-white">正常</span>';
           }
@@ -204,7 +204,7 @@
               <td>
                 <div class="btn-list flex-nowrap">
                   <a href="javascript:void(0);" class="btn btn-primary btn-sm admin-btn-edit" data-id="${item.id}">修改</a>
-                  <a href="javascript:void(0);" class="btn btn-warning btn-sm admin-btn-ban" data-uid="${item.userId}" data-state="${authorState}">${authorState === 1 ? '解禁' : '禁用'}</a>
+                  <a href="javascript:void(0);" class="btn btn-warning btn-sm admin-btn-ban" data-aid="${item.id}" data-astate="${articleState}">${articleState == 1 ? '解禁' : '禁用'}</a>
                   <a href="javascript:void(0);" class="btn btn-danger btn-sm admin-btn-delete ${item.deleteState===1?'disabled':''}" data-id="${item.id}">删除</a>
                 </div>
               </td>
@@ -242,19 +242,19 @@
     $('#admin_article_pagination').on('click', '.page-num', function() { currentPage = parseInt($(this).data('page')); renderArticleTable(); });
 
     $('#admin_article_tbody').on('click', '.admin-btn-ban', function() {
-      let userId = $(this).data('uid');
-      let currentState = $(this).data('state');
+      let articleId = $(this).data('aid');
+      let currentState = $(this).data('astate');
       let newState = currentState == 1 ? 0 : 1;
-      let actionText = newState == 1 ? '禁言' : '解禁';
-      if (confirm(`确定要${actionText}该用户吗？`)) {
+      let actionText = newState == 1 ? '禁用' : '解禁';
+      if (confirm(`确定要${actionText}该文章吗？`)) {
         $.ajax({
           type: 'POST',
-          url: 'user/admin/ban',
+          url: 'article/admin/updateState',
           contentType: 'application/x-www-form-urlencoded',
-          data: { id: userId, state: newState },
+          data: { id: articleId, state: newState },
           success: function(res) {
             if (res.code == 0) {
-              $.toast({ heading: '成功', text: `该用户已被成功${actionText}`, icon: 'success' });
+              $.toast({ heading: '成功', text: `文章已成功${actionText}`, icon: 'success' });
               loadAdminArticles();
             } else {
               $.toast({ heading: '警告', text: res.message || '操作失败', icon: 'warning' });
@@ -317,7 +317,7 @@
 
       $.ajax({
         type: 'POST',
-        url: 'article/modify',
+        url: 'article/admin/modify',
         contentType: 'application/x-www-form-urlencoded',
         data: { id: articleId, title: newTitle, content: newContent },
         success: function(res) {
